@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Advanced NRQL Builder</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font: 14px/1.5 Arial, sans-serif;
+            background: #f4f4f4;
+            transition: background .3s, color .3s
+        }
+
+        .dark {
+            background: #1e1e1e;
+            color: #ddd
+        }
+
+        .container {
+            max-width: 960px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: background .3s, color .3s
+        }
+
+        .dark .container {
+            background: #2a2a2a
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 1.8em
+        }
+
+        label {
+            display: block;
+            margin: 1em 0 .3em;
+            font-weight: bold
+        }
+
+        select,
+        input,
+        button,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            margin-bottom: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        select:focus,
+        input:focus,
+        textarea:focus {
+            border-color: #007bff;
+            outline: none
+        }
+
+        .row {
+            display: flex;
+            gap: 10px
+        }
+
+        .row>* {
+            flex: 1
+        }
+
+        .section {
+            margin-top: 2em;
+            padding-top: 1em;
+            border-top: 1px solid #ddd
+        }
+
+        #queryOutput {
+            height: 150px;
+            font-family: monospace;
+            border: 2px solid #ccc;
+            transition: border .2s
+        }
+
+        #queryOutput.invalid {
+            border-color: #e3342f
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        #themeToggle {
+            background: #007bff;
+            color: #fff;
+            border: none
+        }
+
+        #copyBtn {
+            background: #28a745;
+            color: #fff;
+            border: none
+        }
+
+        .filter-row {
+            background: #fafafa;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 8px
+        }
+
+        .filter-row .row {
+            margin-top: 5px
+        }
+
+        .tag {
+            background: #007bff;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            display: inline-flex;
+            align-items: center
+        }
+
+        .tag button {
+            background: transparent;
+            border: none;
+            color: #fff;
+            margin-left: 6px;
+            cursor: pointer
+        }
+
+        .clear-btn {
+            background: #e3342f;
+            color: #fff;
+            border: none;
+            padding: 4px 8px;
+            font-size: .8em;
+            border-radius: 4px
+        }
+
+        /* Ensure both halves of the .row align vertically */
+        .row.align-center {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔧 Advanced NRQL Builder</h1>
+        <button id="themeToggle">Switch Dark/Light</button>
+
+        <label>Load Template</label>
+        <select id="templates">
+            <option value="">-- none --</option>
+            <option value="errors400">400/404 Error Count</option>
+            <option value="uniqueUsers">Unique Users Last Hour</option>
+        </select>
+
+        <label>Table</label>
+        <select id="table">
+            <option>PageAction</option>
+            <option>PageView</option>
+            <option>JavaScriptError</option>
+            <option>AjaxRequest</option>
+        </select>
+
+        <label>Aggregation Function (optional)</label>
+        <div class="row">
+            <select id="aggFunc">
+                <option value="">-- none --</option>
+                <optgroup label="Metrics">
+                    <option value="count">count</option>
+                    <option value="uniqueCount">uniqueCount</option>
+                    <option value="average">average</option>
+                    <option value="sum">sum</option>
+                    <option value="min">min</option>
+                    <option value="max">max</option>
+                    <option value="percentile">percentile</option>
+                </optgroup>
+            </select>
+            <select id="aggField" style="display:none"></select>
+            <input id="aggPercentile" placeholder="percentile (e.g. 95)" style="display:none" />
+        </div>
+        <input id="aggAlias" placeholder="Alias (e.g. viewCount)" />
+
+        <label>Filters (WHERE)</label>
+        <div id="filters"></div>
+        <button id="addFilter">+ Add Filter</button>
+
+        <div class="section">
+            <h3>Time Range</h3>
+            <div class="row">
+                <div>
+                    <label><input type="checkbox" id="useRelSince" /> Use Relative SINCE</label>
+                    <div class="row">
+                        <input type="number" id="relSinceVal" placeholder="value" disabled />
+                        <select id="relSinceUnit" disabled>
+                            <option>minutes</option>
+                            <option>hours</option>
+                            <option>days</option>
+                            <option>months</option>
+                            <option>years</option>
+                        </select>
+                        <span>ago</span>
+                    </div>
+                    <button class="clear-btn" id="clearRelSince">Clear SINCE</button>
+                </div>
+                <div>
+                    <label><input type="checkbox" id="useRelUntil" /> Use Relative UNTIL</label>
+                    <div class="row">
+                        <input type="number" id="relUntilVal" placeholder="value" disabled />
+                        <select id="relUntilUnit" disabled>
+                            <option>minutes</option>
+                            <option>hours</option>
+                            <option>days</option>
+                            <option>months</option>
+                            <option>years</option>
+                        </select>
+                        <span>ago</span>
+                    </div>
+                    <button class="clear-btn" id="clearRelUntil">Clear UNTIL</button>
+                </div>
+            </div>
+            <div class="row align-center" style="margin-top:10px;">
+                <div>
+                    <label><input type="checkbox" id="useAbsTime" /> Use Absolute Time Range</label>
+                    <input type="date" id="absSinceDate" disabled />
+                    <input type="time" id="absSinceTime" step="1" disabled />
+                </div>
+                <div>
+                    <input type="date" id="absUntilDate" disabled />
+                    <input type="time" id="absUntilTime" step="1" disabled />
+                    <button class="clear-btn" id="clearAbsTime">Clear Absolute</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <label><input type="checkbox" id="useTimeseries" /> Add TIMESERIES</label>
+            <div class="row">
+                <input type="number" id="tsVal" placeholder="bucket" disabled />
+                <select id="tsUnit" disabled>
+                    <option>seconds</option>
+                    <option>minutes</option>
+                    <option>hours</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="section">
+            <label>FACET BY (double‑click to add)</label>
+            <select id="facetList" multiple size="6"></select>
+            <div class="tags" id="facetTags"></div>
+            <button class="clear-btn" id="clearFacet">Clear All Facets</button>
+
+            <label>LIMIT</label>
+            <input id="limit" type="number" placeholder="e.g. 100" />
+        </div>
+
+        <div class="section">
+            <label>Custom Macros & Snippets (name=value)</label>
+            <textarea id="macroDefs" rows="3"></textarea>
+        </div>
+
+        <div class="section">
+            <h3>Saved Query Library</h3>
+            <div class="row">
+                <input id="saveName" placeholder="Query name" />
+                <button id="saveQueryBtn">Save</button>
+            </div>
+            <select id="savedList" size="4"></select>
+            <div class="row">
+                <button id="loadQueryBtn">Load</button>
+                <button id="delQueryBtn">Delete</button>
+            </div>
+        </div>
+
+        <button id="build" style="background:#28a745;color:#fff">Build Query</button>
+        <button id="copyBtn" style="margin-left:10px">Copy NRQL</button>
+
+        <div class="section">
+            <label>Generated NRQL</label>
+            <textarea id="queryOutput" readonly></textarea>
+        </div>
+    </div>
+
+    <script>
+        // Schemas placeholder
+        const SCHEMA = {
+            PageAction: [
+                "timestamp", "anonymous", "apdMode", "assetId", "audioCodec",
+                "bandwidthRedundancyRatio", "cdnName", "cirrRecent", "cirrSession",
+                "deviceId", "distanceToOrigin", "fixtureId", "hypercare", "isAutoPlay",
+                "isTopBitrate", "isWithinLiveWindow", "mediaType", "playbackSources",
+                "playerName", "presentationDelay", "qualityLevelRecent",
+                "qualityLevelSession", "rotationCount", "sessionId", "sourceCount",
+                "sourceIdentifier", "sourceOrigin", "sourceUrl", "stabilityScoreRecent",
+                "stabilityScoreSession", "videoCodec", "viewerId", "actionName",
+                "activeState", "adManagerName", "adManagerState", "agentVersion",
+                "appId", "appModeType", "appModeVariant", "appName", "asn", "asnLatitude",
+                "asnLongitude", "asnOrganization", "billingCountry", "boot.launch.target",
+                "boot.launch.version.bootstrap", "boot.launch.version.target",
+                "browserHeight", "browserWidth", "cacheHit", "cacheKey", "capabilities",
+                "category", "categoryName", "cdnIndex", "chapter", "chapterVersion", "city",
+                "clientIp", "connectionType", "contentCountry", "core.activityState",
+                "core.adapterVersion", "core.bootstrapVersion", "core.chapterName",
+                "core.chapterVersion", "core.contentCountry", "core.deviceBrand",
+                "core.deviceCpuCount", "core.deviceId", "core.deviceManufacturer",
+                "core.deviceModel", "core.deviceOsName", "core.deviceOsVersion",
+                "core.deviceRamGb", "core.deviceTier", "core.deviceType",
+                "core.deviceUserAgent", "core.firmwareVersion",
+                "core.fvDataFileRevision", "core.nrDeviceUuid", "core.partnerId",
+                "core.platform", "core.sessionId", "core.userState", "core.userStatus",
+                "core.userType", "countryCode", "currentUrl", "daznId", "delayInit",
+                "deviceModel", "devicePlatform", "deviceType", "duration", "durationMs",
+                "dynamicRange", "endTime", "entityGuid", "environmentGroup", "eventId",
+                "firmwareVersion", "firstChunkLoad", "focusedUi", "geoCountry",
+                "hasDevelopmentPath", "hasGoogle", "hasToken", "hasYospace", "homeOfX",
+                "inactiveModeSupported", "initId", "interruptionReason",
+                "isAlibCanaryUser@Dazn/MatchDayPanelWeb",
+                "isAlibCanaryUser@Dazn/SportsdataWeb", "isAuthChapter", "isOverlayShown",
+                "isPersonalised", "isUmShown", "jwt.expiredIso", "jwt.expires",
+                "jwt.issued", "jwt.issuedIso", "language", "languages", "manufacturer",
+                "message", "messageState", "muted", "name", "nativeApp",
+                "newBootstrapVersion", "newCatalogVersion", "newsLocale",
+                "numberOfTiles", "packageName", "packageVersion", "page", "pageUrl",
+                "platform", "platformType", "pubbyAction", "pubbyClientConfigured",
+                "pubbyClientExists", "randomAbPoint", "reason", "referrerUrl", "regionCode",
+                "renderDuration", "routerAction", "routerState", "session",
+                "sessionTraceId", "severity", "solutionVersion", "source", "sourceId",
+                "spanName", "ssaiSources", "startTime", "startupResponseData", "subPage",
+                "success", "timeSinceLoad", "title", "tokenExpired", "tokenTtl",
+                "umMessageId", "urlPath", "useExternalAdCdn", "userAgentName",
+                "userAgentOs", "userAgentVersion", "userStatus", "viewName", "volume",
+                "wasSubscribed"
+            ],
+            PageView: [
+                "timestamp", "agentVersion", "appId", "appModeType", "appModeVariant",
+                "appName", "asn", "asnLatitude", "asnLongitude", "asnOrganization",
+                "backendDuration", "boot.launch.target", "boot.launch.version.bootstrap",
+                "boot.launch.version.target", "browserTransactionName", "city", "clientIp",
+                "connectionSetupDuration", "core.adapterVersion", "core.bootstrapVersion",
+                "core.deviceBrand", "core.deviceCpuCount", "core.deviceId",
+                "core.deviceManufacturer", "core.deviceModel", "core.deviceOsName",
+                "core.deviceOsVersion", "core.deviceRamGb", "core.deviceType",
+                "core.deviceUserAgent", "core.firmwareVersion", "core.nrDeviceUuid",
+                "core.partnerId", "core.platform", "core.sessionId", "countryCode",
+                "deviceId", "deviceType", "dnsLookupDuration", "domProcessingDuration",
+                "domain", "duration", "entityGuid", "environmentGroup",
+                "firstContentfulPaint", "firstPaint", "geoCountry", "hasReplay",
+                "manufacturer", "name", "nativeApp", "networkDuration",
+                "pageRenderingDuration", "pageTraceId", "pageUrl", "platform",
+                "platformType", "queueDuration", "randomAbPoint", "regionCode",
+                "secureHandshakeDuration", "session", "sessionId", "sessionTraceId",
+                "userAgentName", "userAgentOs", "userAgentVersion", "viewerId",
+                "webAppDuration"
+            ],
+            JavaScriptError: [
+                "timestamp", "actionText", "activeState", "agentVersion", "alib", "appId",
+                "appModeType", "appModeVariant", "appName", "asn", "asnLatitude",
+                "asnLongitude", "asnOrganization", "billingCountry",
+                "boot.launch.target", "boot.launch.version.bootstrap",
+                "boot.launch.version.target", "browserInteractionId", "browserStackHash",
+                "caughtInPackage", "caughtInPackageVersion", "chapter", "chapterVersion",
+                "city", "clientIp", "code", "contentCountry", "core.adapterVersion",
+                "core.bootstrapVersion", "core.chapterName", "core.chapterVersion",
+                "core.contentCountry", "core.deviceBrand", "core.deviceCpuCount",
+                "core.deviceId", "core.deviceManufacturer", "core.deviceModel",
+                "core.deviceOsName", "core.deviceOsVersion", "core.deviceRamGb",
+                "core.deviceTier", "core.deviceType", "core.deviceUserAgent",
+                "core.firmwareVersion", "core.fvDataFileRevision", "core.nrDeviceUuid",
+                "core.partnerId", "core.platform", "core.sessionId", "core.userState",
+                "core.userStatus", "core.userType", "countryCode", "daznId", "description",
+                "deviceId", "deviceModel", "devicePlatform", "deviceType", "domain",
+                "durationMs", "endpoint", "entityGuid", "environmentGroup", "eraroCode",
+                "erroName", "errorCategory", "errorClass", "errorCode", "errorId",
+                "errorInfo", "errorMessage", "errorStatus", "errorTag", "errorType",
+                "firmwareVersion", "firstErrorInSession", "firstOccurrenceTimestamp",
+                "geoCountry", "inApp", "inactiveModeSupported",
+                "isAlibCanaryUser@Dazn/MatchDayPanelWeb",
+                "isAlibCanaryUser@Dazn/SportsdataWeb", "isAuthChapter", "isAutoRefresh",
+                "jwt.expiredIso", "jwt.expires", "jwt.issued", "jwt.issuedIso", "manufacturer",
+                "name", "nativeApp", "newsLocale", "packageEntryPath", "packageName",
+                "packageVersion", "pageCountry", "pageLanguage", "pageUrl",
+                "parentEventId", "payload", "platform", "platformType", "randomAbPoint",
+                "regionCode", "releaseIds", "request", "requestUri", "response", "retries",
+                "safeMode", "service", "session", "sessionTraceId", "source", "sourceCaller",
+                "stackHash", "stackTrace", "startupResponseData", "status", "statusCode",
+                "transactionName", "unhandledPromiseRejection", "userAgentName",
+                "userAgentOs", "userAgentVersion", "userStatus", "viewerId",
+                "zendeskLocale"
+            ],
+            AjaxRequest: [
+                "timestamp", "agentVersion", "appId", "appModeType", "appModeVariant",
+                "appName", "asn", "boot.launch.version.bootstrap",
+                "boot.launch.version.target", "chapter", "city", "clientIp",
+                "contentCountry", "core.activityState", "core.adapterVersion",
+                "core.bootstrapVersion", "core.chapterName", "core.chapterVersion",
+                "core.contentCountry", "core.deviceBrand", "core.deviceCpuCount",
+                "core.deviceId", "core.deviceManufacturer", "core.deviceModel",
+                "core.deviceOsName", "core.deviceOsVersion", "core.deviceRamGb",
+                "core.deviceTier", "core.deviceType", "core.deviceUserAgent",
+                "core.firmwareVersion", "core.fvDataFileRevision", "core.nrDeviceUuid",
+                "core.partnerId", "core.platform", "core.sessionId", "core.userState",
+                "core.userStatus", "core.userType", "countryCode", "daznId", "deviceId",
+                "deviceType", "entityGuid", "geoCountry", "hostname", "httpMethod",
+                "httpResponseCode", "isAuthChapter", "language", "manufacturer",
+                "nativeApp", "pageUrl", "platform", "platformType", "regionCode",
+                "requestBodySize", "requestUrl", "responseBodySize", "session",
+                "sessionTraceId", "startupResponseData", "timeToLoadEventStart",
+                "trace.id", "userId", "userStatus", "uuid", "version", "viewerId"
+            ]
+        };
+
+        // Shortcuts
+        const tableEl = document.getElementById('table'),
+            filtersEl = document.getElementById('filters'),
+            templates = document.getElementById('templates'),
+            aggFuncEl = document.getElementById('aggFunc'),
+            aggFieldEl = document.getElementById('aggField'),
+            aggPercEl = document.getElementById('aggPercentile'),
+            aggAlias = document.getElementById('aggAlias'),
+            facetList = document.getElementById('facetList'),
+            facetTags = document.getElementById('facetTags'),
+            saveName = document.getElementById('saveName'),
+            savedList = document.getElementById('savedList'),
+            queryOut = document.getElementById('queryOutput');
+
+        // Dark mode
+        document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('dark');
+
+        // Templates (same as before)...
+
+        // Filter row
+        function makeFilterRow() {
+            const row = document.createElement('div'); row.className = 'filter-row';
+            const search = document.createElement('input'); search.placeholder = 'Search column…';
+            const fld = document.createElement('select'); fld.className = 'colSelect';
+            function pop() {
+                const t = search.value.toLowerCase(); fld.innerHTML = ''; SCHEMA[tableEl.value]
+                    .filter(c => c.toLowerCase().includes(t)).forEach(c => fld.add(new Option(c, c)));
+            }
+            search.oninput = pop; tableEl.addEventListener('change', pop); pop();
+            const op = document.createElement('select');['=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'IS NULL', 'IS NOT NULL']
+                .forEach(o => op.add(new Option(o, o)));
+            const val = document.createElement('input'); val.placeholder = 'value';
+            const rm = document.createElement('button'); rm.textContent = '–'; rm.onclick = () => row.remove();
+            row.append(search);
+            const sub = document.createElement('div'); sub.className = 'row';
+            sub.append(fld, op, val, rm); row.append(sub);
+            return row;
+        }
+        document.getElementById('addFilter').onclick = () => filtersEl.appendChild(makeFilterRow());
+        tableEl.onchange = () => { filtersEl.querySelectorAll('input').forEach(i => i.value = ''); rebuildFacet(); rebuildAggField(); };
+        tableEl.onchange();
+
+        // Facet
+        function rebuildFacet() {
+            facetList.innerHTML = '';
+            SCHEMA[tableEl.value].forEach(c => {
+                const opt = new Option(c, c);
+                opt.ondblclick = () => {
+                    opt.selected = true;
+                    renderFacetTags();
+                };
+                facetList.add(opt);
+            });
+            // new line:
+            facetList.multiple = true;
+            facetList.onchange = renderFacetTags;
+            renderFacetTags();
+        }
+        function renderFacetTags() {
+            facetTags.innerHTML = '';
+            Array.from(facetList.selectedOptions).forEach(opt => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.textContent = opt.value;
+
+                const btn = document.createElement('button');
+                btn.textContent = '×';
+                btn.onclick = () => {
+                    opt.selected = true;
+                    renderFacetTags();
+                };
+
+                tag.append(btn);
+                facetTags.append(tag);
+            });
+        }
+
+        document.getElementById('clearFacet').onclick = () => {
+            // Deselect every option, then re‑render tags
+            Array.from(facetList.options).forEach(opt => opt.selected = false);
+            renderFacetTags();
+        };
+
+        // Agg field
+        function rebuildAggField() {
+            const f = aggFuncEl.value;
+            aggFieldEl.style.display = f ? 'block' : 'none';
+            aggPercEl.style.display = f === 'percentile' ? 'block' : 'none';
+            aggFieldEl.innerHTML = '';
+            if (f) SCHEMA[tableEl.value].forEach(c => aggFieldEl.add(new Option(c, c)));
+        }
+        aggFuncEl.onchange = rebuildAggField; rebuildAggField();
+
+        // Time toggles
+        function bindToggle(id, ids) {
+            document.getElementById(id).onchange = e => {
+                ids.forEach(i => { const el = document.getElementById(i); el.disabled = !e.target.checked; if (!e.target.checked) el.value = ''; });
+            };
+        }
+        bindToggle('useRelSince', ['relSinceVal', 'relSinceUnit']);
+        bindToggle('useRelUntil', ['relUntilVal', 'relUntilUnit']);
+        bindToggle('useAbsTime', ['absSinceDate', 'absSinceTime', 'absUntilDate', 'absUntilTime']);
+        document.getElementById('clearAbsTime').onclick = _ => {
+            ['useAbsTime', 'absSinceDate', 'absSinceTime', 'absUntilDate', 'absUntilTime'].forEach(i => {
+                const el = document.getElementById(i); if (el.type === 'checkbox') el.checked = false; else el.value = ''; el.disabled = true;
+            });
+        };
+
+        // Timeseries
+        const tsChk = document.getElementById('useTimeseries');
+        tsChk.onchange = e => {
+            ['tsVal', 'tsUnit'].forEach(i => {
+                const el = document.getElementById(i); el.disabled = !e.target.checked; if (!e.target.checked) el.value = '';
+            });
+        };
+
+        // Macros
+        function applyMacros(q) {
+            document.getElementById('macroDefs').value.split('\n').forEach(l => {
+                const [k, v] = l.split('=').map(x => x.trim());
+                if (k && v) q = q.replace(new RegExp('\\' + k, 'g'), v);
+            });
+            return q;
+        }
+
+        // Saved queries...
+        function refreshSaved() {
+            savedList.innerHTML = '';
+            Object.keys(localStorage).filter(k => k.startsWith('nrql_')).forEach(k => {
+                savedList.add(new Option(k.slice(5), k));
+            });
+        }
+        document.getElementById('saveQueryBtn').onclick = () => {
+            const n = saveName.value.trim(); if (!n) return alert('Name?');
+            localStorage.setItem('nrql_' + n, queryOut.value); refreshSaved();
+        };
+        document.getElementById('loadQueryBtn').onclick = () => {
+            const k = savedList.value; if (k) queryOut.value = localStorage.getItem(k);
+        };
+        document.getElementById('delQueryBtn').onclick = () => {
+            const k = savedList.value; if (k) localStorage.removeItem(k), refreshSaved();
+        };
+        refreshSaved();
+
+        // Build & Copy
+        document.getElementById('build').onclick = () => {
+            let q = 'SELECT ', f = aggFuncEl.value, a = aggAlias.value.trim();
+            if (f) { q += (f === 'percentile' ? `percentile(${aggFieldEl.value},${aggPercEl.value})` : `${f}(${aggFieldEl.value || '*'})`); }
+            else q += '*';
+            if (a) q += ` AS ${a}`; q += ` FROM ${tableEl.value}`;
+            // WHERE
+            const wh = [];
+            filtersEl.querySelectorAll('.filter-row').forEach(r => {
+                const selects = r.querySelectorAll('select');
+                const fld = selects[0].value;
+                const op = selects[1].value;
+                // Pick the *second* input in this row (index 1):
+                const inputs = r.querySelectorAll('input');
+                const val = inputs[1].value;
+                if (!fld) return;
+                wh.push(op.includes('NULL') ? `${fld} ${op}` : (op === 'IN' ? `${fld} IN(${val})` : `${fld} ${op} '${val}'`));
+            });
+            if (wh.length) q += ` WHERE ${wh.join(' AND ')}`;
+            // FACET
+            const fs = Array.from(facetList.selectedOptions).map(o => o.value);
+            if (fs.length) q += ` FACET ${fs.join(',')}`;
+            // TIMESERIES
+            if (tsChk.checked) {
+                const tv = document.getElementById('tsVal').value, tu = document.getElementById('tsUnit').value;
+                if (tv) q += ` TIMESERIES ${tv} ${tu}`;
+            }
+            // Relative
+            [['useRelSince', 'relSinceVal', 'relSinceUnit', 'SINCE'], ['useRelUntil', 'relUntilVal', 'relUntilUnit', 'UNTIL']]
+                .forEach(([c, v, u, kw]) => {
+                    if (document.getElementById(c).checked) {
+                        const vv = document.getElementById(v).value, uu = document.getElementById(u).value;
+                        if (vv) q += ` ${kw} ${vv} ${uu} ago`;
+                    }
+                }
+                );
+            // Absolute
+            if (document.getElementById('useAbsTime').checked) {
+                const sd = document.getElementById('absSinceDate').value, st = document.getElementById('absSinceTime').value;
+                const ed = document.getElementById('absUntilDate').value, et = document.getElementById('absUntilTime').value;
+                if (sd && st) q += ` SINCE '${sd} ${st}'`; if (ed && et) q += ` UNTIL '${ed} ${et}'`;
+            }
+            // LIMIT
+            const lim = document.getElementById('limit').value;
+            if (lim) q += ` LIMIT ${lim}`;
+            // Macros
+            q = applyMacros(q);
+            // Validate
+            if (!/^SELECT .+ FROM/.test(q)) queryOut.classList.add('invalid'); else queryOut.classList.remove('invalid');
+            queryOut.value = q;
+        };
+        document.getElementById('copyBtn').onclick = () => navigator.clipboard.writeText(queryOut.value);
+    </script>
+</body>
+</html>
