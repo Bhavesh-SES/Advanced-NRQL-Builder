@@ -222,17 +222,11 @@
   <script>
     const SCHEMA = {
       PageAction: [
-        "timestamp", "anonymous", "apdMode", "assetId", "audioCodec",
-        "bandwidthRedundancyRatio", "cdnName", "cirrRecent", "cirrSession",
-        "deviceId", "distanceToOrigin", "fixtureId", "hypercare", "isAutoPlay",
-        "isTopBitrate", "isWithinLiveWindow", "mediaType", "playbackSources",
-        "playerName", "presentationDelay", "qualityLevelRecent",
-        "qualityLevelSession", "rotationCount", "sessionId", "sourceCount",
-        "sourceIdentifier", "sourceOrigin", "sourceUrl", "stabilityScoreRecent",
-        "stabilityScoreSession", "videoCodec", "viewerId", "actionName",
         "activeState", "adManagerName", "adManagerState", "agentVersion",
         "appId", "appModeType", "appModeVariant", "appName", "asn", "asnLatitude",
-        "asnLongitude", "asnOrganization", "billingCountry", "boot.launch.target",
+        "asnLongitude", "asnOrganization", "anonymous", "apdMode", "assetId", "audioCodec",
+        "billingCountry", "boot.launch.target",
+        "bandwidthRedundancyRatio", "cdnName", "cirrRecent", "cirrSession",
         "boot.launch.version.bootstrap", "boot.launch.version.target",
         "browserHeight", "browserWidth", "cacheHit", "cacheKey", "capabilities",
         "category", "categoryName", "cdnIndex", "chapter", "chapterVersion", "city",
@@ -246,6 +240,7 @@
         "core.fvDataFileRevision", "core.nrDeviceUuid", "core.partnerId",
         "core.platform", "core.sessionId", "core.userState", "core.userStatus",
         "core.userType", "countryCode", "currentUrl", "daznId", "delayInit",
+        "deviceId", "distanceToOrigin", "fixtureId", "hypercare", "isAutoPlay",
         "deviceModel", "devicePlatform", "deviceType", "duration", "durationMs",
         "dynamicRange", "endTime", "entityGuid", "environmentGroup", "eventId",
         "firmwareVersion", "firstChunkLoad", "focusedUi", "geoCountry",
@@ -254,26 +249,30 @@
         "isAlibCanaryUser@Dazn/MatchDayPanelWeb",
         "isAlibCanaryUser@Dazn/SportsdataWeb", "isAuthChapter", "isOverlayShown",
         "isPersonalised", "isUmShown", "jwt.expiredIso", "jwt.expires",
+        "isTopBitrate", "isWithinLiveWindow", "mediaType", "playbackSources",
         "jwt.issued", "jwt.issuedIso", "language", "languages", "manufacturer",
         "message", "messageState", "muted", "name", "nativeApp",
         "newBootstrapVersion", "newCatalogVersion", "newsLocale",
         "numberOfTiles", "packageName", "packageVersion", "page", "pageUrl",
         "platform", "platformType", "pubbyAction", "pubbyClientConfigured",
+        "playerName", "presentationDelay", "qualityLevelRecent",
         "pubbyClientExists", "randomAbPoint", "reason", "referrerUrl", "regionCode",
+        "qualityLevelSession", "rotationCount", "sessionId", "sourceCount",
         "renderDuration", "routerAction", "routerState", "session",
         "sessionTraceId", "severity", "solutionVersion", "source", "sourceId",
+        "sourceIdentifier", "sourceOrigin", "sourceUrl", "stabilityScoreRecent",
         "spanName", "ssaiSources", "startTime", "startupResponseData", "subPage",
+        "stabilityScoreSession", "videoCodec", "viewerId", "actionName",
         "success", "timeSinceLoad", "title", "tokenExpired", "tokenTtl",
-        "umMessageId", "urlPath", "useExternalAdCdn", "userAgentName",
+        "timestamp", "umMessageId", "urlPath", "useExternalAdCdn", "userAgentName",
         "userAgentOs", "userAgentVersion", "userStatus", "viewName", "volume",
         "wasSubscribed"
       ],
       PageView: [
-        "timestamp", "agentVersion", "appId", "appModeType", "appModeVariant",
-        "appName", "asn", "asnLatitude", "asnLongitude", "asnOrganization",
-        "backendDuration", "boot.launch.target", "boot.launch.version.bootstrap",
-        "boot.launch.version.target", "browserTransactionName", "city", "clientIp",
-        "connectionSetupDuration", "core.adapterVersion", "core.bootstrapVersion",
+        "appName", "asn", "asnLatitude", "asnLongitude", "asnOrganization", "agentVersion",
+        "appId", "appModeType", "appModeVariant", "backendDuration", "boot.launch.target", 
+        "boot.launch.version.bootstrap", "boot.launch.version.target", "browserTransactionName", 
+        "city", "clientIp", "connectionSetupDuration", "core.adapterVersion", "core.bootstrapVersion",
         "core.deviceBrand", "core.deviceCpuCount", "core.deviceId",
         "core.deviceManufacturer", "core.deviceModel", "core.deviceOsName",
         "core.deviceOsVersion", "core.deviceRamGb", "core.deviceType",
@@ -286,14 +285,14 @@
         "pageRenderingDuration", "pageTraceId", "pageUrl", "platform",
         "platformType", "queueDuration", "randomAbPoint", "regionCode",
         "secureHandshakeDuration", "session", "sessionId", "sessionTraceId",
+        "timestamp",
         "userAgentName", "userAgentOs", "userAgentVersion", "viewerId",
         "webAppDuration"
       ],
       JavaScriptError: [
-        "timestamp", "actionText", "activeState", "agentVersion", "alib", "appId",
         "appModeType", "appModeVariant", "appName", "asn", "asnLatitude",
-        "asnLongitude", "asnOrganization", "billingCountry",
-        "boot.launch.target", "boot.launch.version.bootstrap",
+        "asnLongitude", "asnOrganization", "actionText", "activeState", "agentVersion", "alib", "appId",
+        "billingCountry", "boot.launch.target", "boot.launch.version.bootstrap",
         "boot.launch.version.target", "browserInteractionId", "browserStackHash",
         "caughtInPackage", "caughtInPackageVersion", "chapter", "chapterVersion",
         "city", "clientIp", "code", "contentCountry", "core.adapterVersion",
@@ -320,14 +319,13 @@
         "regionCode", "releaseIds", "request", "requestUri", "response", "retries",
         "safeMode", "service", "session", "sessionTraceId", "source", "sourceCaller",
         "stackHash", "stackTrace", "startupResponseData", "status", "statusCode",
-        "transactionName", "unhandledPromiseRejection", "userAgentName",
+        "timestamp", "transactionName", "unhandledPromiseRejection", "userAgentName",
         "userAgentOs", "userAgentVersion", "userStatus", "viewerId",
         "zendeskLocale"
       ],
       AjaxRequest: [
-        "timestamp", "agentVersion", "appId", "appModeType", "appModeVariant",
-        "appName", "asn", "boot.launch.version.bootstrap",
-        "boot.launch.version.target", "chapter", "city", "clientIp",
+        "appName", "asn", "agentVersion", "appId", "appModeType", "appModeVariant",
+        "boot.launch.version.bootstrap", "boot.launch.version.target", "chapter", "city", "clientIp",
         "contentCountry", "core.activityState", "core.adapterVersion",
         "core.bootstrapVersion", "core.chapterName", "core.chapterVersion",
         "core.contentCountry", "core.deviceBrand", "core.deviceCpuCount",
@@ -342,9 +340,8 @@
         "nativeApp", "pageUrl", "platform", "platformType", "regionCode",
         "requestBodySize", "requestUrl", "responseBodySize", "session",
         "sessionTraceId", "startupResponseData", "timeToLoadEventStart",
-        "trace.id", "userId", "userStatus", "uuid", "version", "viewerId"
+        "timestamp", "trace.id", "userId", "userStatus", "uuid", "version", "viewerId"
       ]
-
     };
 
     const state = {
