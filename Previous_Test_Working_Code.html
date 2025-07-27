@@ -3,298 +3,205 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>Advanced NRQL Builder</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NRQL Query Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font: 14px/1.5 Arial, sans-serif;
-            background: #f4f4f4;
-            transition: background .3s, color .3s
+        :root {
+            --bg: #f5f5f5;
+            --text: #000;
+            --card: #fff;
         }
 
-        .dark {
-            background: #1e1e1e;
-            color: #ddd
+        [data-theme="dark"] {
+            --bg: #1e1e1e;
+            --text: #eaeaea;
+            --card: #2e2e2e;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
         }
 
         .container {
-            max-width: 960px;
-            margin: auto;
-            background: #fff;
             padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section {
+            background: var(--card);
+            padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: background .3s, color .3s
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .dark .container {
-            background: #2a2a2a
-        }
-
-        h1 {
+        .section h2 {
             margin-top: 0;
-            font-size: 1.8em
         }
 
-        label {
-            display: block;
-            margin: 1em 0 .3em;
-            font-weight: bold
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
         }
 
         select,
         input,
         button,
         textarea {
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
             width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            margin-bottom: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        select:focus,
-        input:focus,
-        textarea:focus {
-            border-color: #007bff;
-            outline: none
-        }
-
-        .row {
-            display: flex;
-            gap: 10px
-        }
-
-        .row>* {
-            flex: 1
-        }
-
-        .section {
-            margin-top: 2em;
-            padding-top: 1em;
-            border-top: 1px solid #ddd
-        }
-
-        #queryOutput {
-            height: 150px;
+            height: 100px;
             font-family: monospace;
-            border: 2px solid #ccc;
-            transition: border .2s
-        }
-
-        #queryOutput.invalid {
-            border-color: #e3342f
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        #themeToggle {
-            background: #007bff;
-            color: #fff;
-            border: none
-        }
-
-        #copyBtn {
-            background: #28a745;
-            color: #fff;
-            border: none
         }
 
         .filter-row {
-            background: #fafafa;
-            padding: 10px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            margin-bottom: 8px
-        }
-
-        .filter-row .row {
-            margin-top: 5px
-        }
-
-        .tag {
-            background: #007bff;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            margin: 2px;
-            display: inline-flex;
-            align-items: center
-        }
-
-        .tag button {
-            background: transparent;
-            border: none;
-            color: #fff;
-            margin-left: 6px;
-            cursor: pointer
-        }
-
-        .clear-btn {
-            background: #e3342f;
-            color: #fff;
-            border: none;
-            padding: 4px 8px;
-            font-size: .8em;
-            border-radius: 4px
-        }
-
-        /* Ensure both halves of the .row align vertically */
-        .row.align-center {
             display: flex;
-            align-items: center;
             gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .filter-row select,
+        .filter-row input {
+            min-width: 100px;
+        }
+
+        .filter-row button {
+            background: red;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+
+        #themeToggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
         }
     </style>
 </head>
 
-<body>
+<body data-theme="light">
+    <button id="themeToggle">Toggle Theme</button>
     <div class="container">
-        <h1>🔧 Advanced NRQL Builder</h1>
-        <button id="themeToggle">Switch Dark/Light</button>
+        <div class="section">
+            <h2>Table & Column Selection</h2>
+            <div class="row">
+                <select id="tableSelect"></select>
+                <select id="columnSelect" multiple style="width:400px"></select>
+            </div>
+        </div>
 
-        <label>Load Template</label>
-        <select id="templates">
-            <option value="">-- none --</option>
-            <option value="errors400">400/404 Error Count</option>
-            <option value="uniqueUsers">Unique Users Last Hour</option>
-        </select>
+        <div class="section">
+            <h2>Aggregation</h2>
+            <div class="row">
+                <select id="aggFunc">
+                    <option value="">None</option>
+                    <option>count</option>
+                    <option>uniqueCount</option>
+                    <option>average</option>
+                    <option>min</option>
+                    <option>max</option>
+                    <option>sum</option>
+                </select>
+                <select id="aggColumn" style="width:400px"></select>
+            </div>
+        </div>
 
-        <label>Table</label>
-        <select id="table">
-            <option>PageAction</option>
-            <option>PageView</option>
-            <option>JavaScriptError</option>
-            <option>AjaxRequest</option>
-        </select>
-
-        <label>Aggregation Function (optional)</label>
-        <div class="row">
-            <select id="aggFunc">
-                <option value="">-- none --</option>
-                <optgroup label="Metrics">
-                    <option value="count">count</option>
-                    <option value="uniqueCount">uniqueCount</option>
-                    <option value="average">average</option>
-                    <option value="sum">sum</option>
-                    <option value="min">min</option>
-                    <option value="max">max</option>
-                    <option value="percentile">percentile</option>
-                </optgroup>
+        <div class="section" id="timeseriesSection" style="display:none">
+            <h2>Time Series</h2>
+            <select id="timeseriesInterval">
+                <option>1 minute</option>
+                <option>5 minutes</option>
+                <option>10 minutes</option>
+                <option>30 minutes</option>
+                <option>1 hour</option>
             </select>
-            <select id="aggField" style="display:none"></select>
-            <input id="aggPercentile" placeholder="percentile (e.g. 95)" style="display:none" />
-        </div>
-        <input id="aggAlias" placeholder="Alias (e.g. viewCount)" />
-
-        <label>Filters (WHERE)</label>
-        <div id="filters"></div>
-        <button id="addFilter">+ Add Filter</button>
-
-        <div class="section">
-            <h3>Time Range</h3>
-            <div class="row">
-                <div>
-                    <label><input type="checkbox" id="useRelSince" /> Use Relative SINCE</label>
-                    <div class="row">
-                        <input type="number" id="relSinceVal" placeholder="value" disabled />
-                        <select id="relSinceUnit" disabled>
-                            <option>minutes</option>
-                            <option>hours</option>
-                            <option>days</option>
-                            <option>months</option>
-                            <option>years</option>
-                        </select>
-                        <span>ago</span>
-                    </div>
-                    <button class="clear-btn" id="clearRelSince">Clear SINCE</button>
-                </div>
-                <div>
-                    <label><input type="checkbox" id="useRelUntil" /> Use Relative UNTIL</label>
-                    <div class="row">
-                        <input type="number" id="relUntilVal" placeholder="value" disabled />
-                        <select id="relUntilUnit" disabled>
-                            <option>minutes</option>
-                            <option>hours</option>
-                            <option>days</option>
-                            <option>months</option>
-                            <option>years</option>
-                        </select>
-                        <span>ago</span>
-                    </div>
-                    <button class="clear-btn" id="clearRelUntil">Clear UNTIL</button>
-                </div>
-            </div>
-            <div class="row align-center" style="margin-top:10px;">
-                <div>
-                    <label><input type="checkbox" id="useAbsTime" /> Use Absolute Time Range</label>
-                    <input type="date" id="absSinceDate" disabled />
-                    <input type="time" id="absSinceTime" step="1" disabled />
-                </div>
-                <div>
-                    <input type="date" id="absUntilDate" disabled />
-                    <input type="time" id="absUntilTime" step="1" disabled />
-                    <button class="clear-btn" id="clearAbsTime">Clear Absolute</button>
-                </div>
-            </div>
         </div>
 
         <div class="section">
-            <label><input type="checkbox" id="useTimeseries" /> Add TIMESERIES</label>
+            <h2>Filters (WHERE)</h2>
+            <div id="filterContainer"></div>
+            <button onclick="addFilter('AND')">+ AND</button>
+            <button onclick="addFilter('OR')">+ OR</button>
+        </div>
+
+        <div class="section">
+            <h2>FACET</h2>
+            <select id="facetSelect" multiple style="width:400px"></select>
+        </div>
+
+        <div class="section">
+            <h2>Time Range</h2>
             <div class="row">
-                <input type="number" id="tsVal" placeholder="bucket" disabled />
-                <select id="tsUnit" disabled>
-                    <option>seconds</option>
+                <label><input type="radio" name="timeType" value="relative" checked> Relative</label>
+                SINCE <input type="number" id="sinceVal" style="width:60px" /> <select id="sinceUnit">
                     <option>minutes</option>
                     <option>hours</option>
+                    <option>days</option>
+                    <option>weeks</option>
+                </select> ago
+                UNTIL <input type="number" id="untilVal" style="width:60px" /> <select id="untilUnit">
+                    <option>minutes</option>
+                    <option>hours</option>
+                    <option>days</option>
+                    <option>weeks</option>
+                </select> ago
+            </div>
+            <div class="row">
+                <label><input type="radio" name="timeType" value="absolute"> Absolute</label>
+                Start: <input type="date" id="absStartDate" /> <input type="time" id="absStartTime" step="1" />
+                End: <input type="date" id="absEndDate" /> <input type="time" id="absEndTime" step="1" />
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Limit</h2>
+            <input type="text" id="limitInput" placeholder="e.g. 100 or MAX" style="width:120px" />
+        </div>
+
+        <div class="section">
+            <h2>Query Controls</h2>
+            <div class="row">
+                <button id="buildBtn">Build Query</button>
+                <label><input type="checkbox" id="autoRefresh" checked> Auto Refresh</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>NRQL Output</h2>
+            <textarea id="queryOutput" readonly></textarea>
+            <button class="copy-btn" onclick="copyQuery()">Copy</button>
+        </div>
+
+        <div class="section">
+            <h2>Save/Load Queries</h2>
+            <div class="row">
+                <input type="text" id="queryName" placeholder="Query name" />
+                <button onclick="saveQuery()">Save</button>
+                <select id="savedQueries">
+                    <option value="">-- Load --</option>
                 </select>
             </div>
         </div>
-
-        <div class="section">
-            <label>FACET BY (double‑click to add)</label>
-            <select id="facetList" multiple size="6"></select>
-            <div class="tags" id="facetTags"></div>
-            <button class="clear-btn" id="clearFacet">Clear All Facets</button>
-
-            <label>LIMIT</label>
-            <input id="limit" type="number" placeholder="e.g. 100" />
-        </div>
-
-        <div class="section">
-            <label>Custom Macros & Snippets (name=value)</label>
-            <textarea id="macroDefs" rows="3"></textarea>
-        </div>
-
-        <div class="section">
-            <h3>Saved Query Library</h3>
-            <div class="row">
-                <input id="saveName" placeholder="Query name" />
-                <button id="saveQueryBtn">Save</button>
-            </div>
-            <select id="savedList" size="4"></select>
-            <div class="row">
-                <button id="loadQueryBtn">Load</button>
-                <button id="delQueryBtn">Delete</button>
-            </div>
-        </div>
-
-        <button id="build" style="background:#28a745;color:#fff">Build Query</button>
-        <button id="copyBtn" style="margin-left:10px">Copy NRQL</button>
-
-        <div class="section">
-            <label>Generated NRQL</label>
-            <textarea id="queryOutput" readonly></textarea>
-        </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        // Schemas placeholder
         const SCHEMA = {
             PageAction: [
                 "timestamp", "anonymous", "apdMode", "assetId", "audioCodec",
@@ -420,203 +327,275 @@
                 "trace.id", "userId", "userStatus", "uuid", "version", "viewerId"
             ]
         };
-
-        // Shortcuts
-        const tableEl = document.getElementById('table'),
-            filtersEl = document.getElementById('filters'),
-            templates = document.getElementById('templates'),
-            aggFuncEl = document.getElementById('aggFunc'),
-            aggFieldEl = document.getElementById('aggField'),
-            aggPercEl = document.getElementById('aggPercentile'),
-            aggAlias = document.getElementById('aggAlias'),
-            facetList = document.getElementById('facetList'),
-            facetTags = document.getElementById('facetTags'),
-            saveName = document.getElementById('saveName'),
-            savedList = document.getElementById('savedList'),
-            queryOut = document.getElementById('queryOutput');
-
-        // Dark mode
-        document.getElementById('themeToggle').onclick = () => document.body.classList.toggle('dark');
-
-        // Templates (same as before)...
-
-        // Filter row
-        function makeFilterRow() {
-            const row = document.createElement('div'); row.className = 'filter-row';
-            const search = document.createElement('input'); search.placeholder = 'Search column…';
-            const fld = document.createElement('select'); fld.className = 'colSelect';
-            function pop() {
-                const t = search.value.toLowerCase(); fld.innerHTML = ''; SCHEMA[tableEl.value]
-                    .filter(c => c.toLowerCase().includes(t)).forEach(c => fld.add(new Option(c, c)));
-            }
-            search.oninput = pop; tableEl.addEventListener('change', pop); pop();
-            const op = document.createElement('select');['=', '!=', 'LIKE', 'NOT LIKE', 'IN', 'IS NULL', 'IS NOT NULL']
-                .forEach(o => op.add(new Option(o, o)));
-            const val = document.createElement('input'); val.placeholder = 'value';
-            const rm = document.createElement('button'); rm.textContent = '–'; rm.onclick = () => row.remove();
-            row.append(search);
-            const sub = document.createElement('div'); sub.className = 'row';
-            sub.append(fld, op, val, rm); row.append(sub);
-            return row;
+        function toggleTheme() {
+            document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
         }
-        document.getElementById('addFilter').onclick = () => filtersEl.appendChild(makeFilterRow());
-        tableEl.onchange = () => { filtersEl.querySelectorAll('input').forEach(i => i.value = ''); rebuildFacet(); rebuildAggField(); };
-        tableEl.onchange();
+        function init() {
+            // Bind theme toggle
+            document.getElementById('themeToggle').onclick = toggleTheme;
 
-        // Facet
-        function rebuildFacet() {
-            facetList.innerHTML = '';
-            SCHEMA[tableEl.value].forEach(c => {
-                const opt = new Option(c, c);
-                opt.ondblclick = () => {
-                    opt.selected = true;
-                    renderFacetTags();
-                };
-                facetList.add(opt);
+            // Initialize Select2 on static selects
+            $('#columnSelect, #facetSelect, #aggColumn').select2({ width: '200px' });
+
+            // Populate tables
+            for (let t in SCHEMA) $('#tableSelect').append(new Option(t, t));
+            $('#tableSelect').on('change', populateCols);
+
+            // Aggregation -> Timeseries toggle
+            $('#aggFunc').on('change', e => {
+                $('#timeseriesSection').toggle(!!e.target.value);
             });
-            // new line:
-            facetList.multiple = true;
-            facetList.onchange = renderFacetTags;
-            renderFacetTags();
+
+            // Build & auto-refresh
+            $('#buildBtn').on('click', buildQuery);
+            $('#autoRefresh').on('change', e => e.target.checked ? startAuto() : stopAuto());
+
+            // Load saved queries
+            populateCols();
+            loadSaved();
+            $('#savedQueries').on('change', e => loadQuery(e.target.value));
+
+            // Radio switch TimeType (no action needed on UI)
+            $('input[name="timeType"]').on('change', () => { });
         }
-        function renderFacetTags() {
-            facetTags.innerHTML = '';
-            Array.from(facetList.selectedOptions).forEach(opt => {
-                const tag = document.createElement('div');
-                tag.className = 'tag';
-                tag.textContent = opt.value;
 
-                const btn = document.createElement('button');
-                btn.textContent = '×';
-                btn.onclick = () => {
-                    opt.selected = true;
-                    renderFacetTags();
-                };
+        function populateCols() {
+            const table = $('#tableSelect').val();
+            const cols = SCHEMA[table] || [];
 
-                tag.append(btn);
-                facetTags.append(tag);
+            // Columns
+            const colSel = $('#columnSelect');
+            colSel.empty().append(new Option('*', '*'));
+            cols.forEach(c => colSel.append(new Option(c, c)));
+            colSel.trigger('change');
+
+            // Facets & Agg
+            ['#facetSelect', '#aggColumn'].forEach(sel => {
+                const $s = $(sel);
+                $s.empty();
+                cols.forEach(c => $s.append(new Option(c, c)));
+                $s.trigger('change');
             });
         }
 
-        document.getElementById('clearFacet').onclick = () => {
-            // Deselect every option, then re‑render tags
-            Array.from(facetList.options).forEach(opt => opt.selected = false);
-            renderFacetTags();
-        };
+        function addFilter(type = 'AND') {
+            // Create the row container
+            const row = $('<div class="filter-row"></div>');
 
-        // Agg field
-        function rebuildAggField() {
-            const f = aggFuncEl.value;
-            aggFieldEl.style.display = f ? 'block' : 'none';
-            aggPercEl.style.display = f === 'percentile' ? 'block' : 'none';
-            aggFieldEl.innerHTML = '';
-            if (f) SCHEMA[tableEl.value].forEach(c => aggFieldEl.add(new Option(c, c)));
-        }
-        aggFuncEl.onchange = rebuildAggField; rebuildAggField();
+            // Logic (AND/OR)
+            const op = $('<select><option>AND</option><option>OR</option></select>').val(type);
 
-        // Time toggles
-        function bindToggle(id, ids) {
-            document.getElementById(id).onchange = e => {
-                ids.forEach(i => { const el = document.getElementById(i); el.disabled = !e.target.checked; if (!e.target.checked) el.value = ''; });
-            };
-        }
-        bindToggle('useRelSince', ['relSinceVal', 'relSinceUnit']);
-        bindToggle('useRelUntil', ['relUntilVal', 'relUntilUnit']);
-        bindToggle('useAbsTime', ['absSinceDate', 'absSinceTime', 'absUntilDate', 'absUntilTime']);
-        document.getElementById('clearAbsTime').onclick = _ => {
-            ['useAbsTime', 'absSinceDate', 'absSinceTime', 'absUntilDate', 'absUntilTime'].forEach(i => {
-                const el = document.getElementById(i); if (el.type === 'checkbox') el.checked = false; else el.value = ''; el.disabled = true;
-            });
-        };
+            // Column selector: pull from current table schema
+            const col = $('<select class="filter-column"></select>');
+            const cols = SCHEMA[$('#tableSelect').val()] || [];
+            // Add a placeholder option
+            col.append(new Option('Select column…', '', false, false));
+            cols.forEach(c => col.append(new Option(c, c)));
 
-        // Timeseries
-        const tsChk = document.getElementById('useTimeseries');
-        tsChk.onchange = e => {
-            ['tsVal', 'tsUnit'].forEach(i => {
-                const el = document.getElementById(i); el.disabled = !e.target.checked; if (!e.target.checked) el.value = '';
-            });
-        };
+            // Condition selector
+            const cond = $(`
+            <select>
+                <option>=</option>
+                <option>!=</option>
+                <option>LIKE</option>
+                <option>IN</option>
+                <option>NOT IN</option>
+                <option>BETWEEN</option>
+                <option>EXISTS</option>
+                <option>IS NULL</option>
+                <option>IS NOT NULL</option>
+            </select>`);
 
-        // Macros
-        function applyMacros(q) {
-            document.getElementById('macroDefs').value.split('\n').forEach(l => {
-                const [k, v] = l.split('=').map(x => x.trim());
-                if (k && v) q = q.replace(new RegExp('\\' + k, 'g'), v);
-            });
-            return q;
-        }
+            // Value input
+            const val = $('<input type="text" placeholder="Enter value(s)…">');
 
-        // Saved queries...
-        function refreshSaved() {
-            savedList.innerHTML = '';
-            Object.keys(localStorage).filter(k => k.startsWith('nrql_')).forEach(k => {
-                savedList.add(new Option(k.slice(5), k));
+            // Delete button
+            const del = $('<button>❌</button>').on('click', () => row.remove());
+
+            // Assemble and append
+            row.append(op, col, cond, val, del)
+                .appendTo('#filterContainer');
+
+            // **Re-initialize Select2 on this new column dropdown**
+            col.select2({
+                width: '200px',
+                placeholder: 'Select column…',
+                allowClear: true
             });
         }
-        document.getElementById('saveQueryBtn').onclick = () => {
-            const n = saveName.value.trim(); if (!n) return alert('Name?');
-            localStorage.setItem('nrql_' + n, queryOut.value); refreshSaved();
-        };
-        document.getElementById('loadQueryBtn').onclick = () => {
-            const k = savedList.value; if (k) queryOut.value = localStorage.getItem(k);
-        };
-        document.getElementById('delQueryBtn').onclick = () => {
-            const k = savedList.value; if (k) localStorage.removeItem(k), refreshSaved();
-        };
-        refreshSaved();
 
-        // Build & Copy
-        document.getElementById('build').onclick = () => {
-            let q = 'SELECT ', f = aggFuncEl.value, a = aggAlias.value.trim();
-            if (f) { q += (f === 'percentile' ? `percentile(${aggFieldEl.value},${aggPercEl.value})` : `${f}(${aggFieldEl.value || '*'})`); }
-            else q += '*';
-            if (a) q += ` AS ${a}`; q += ` FROM ${tableEl.value}`;
-            // WHERE
-            const wh = [];
-            filtersEl.querySelectorAll('.filter-row').forEach(r => {
-                const selects = r.querySelectorAll('select');
-                const fld = selects[0].value;
-                const op = selects[1].value;
-                // Pick the *second* input in this row (index 1):
-                const inputs = r.querySelectorAll('input');
-                const val = inputs[1].value;
-                if (!fld) return;
-                wh.push(op.includes('NULL') ? `${fld} ${op}` : (op === 'IN' ? `${fld} IN(${val})` : `${fld} ${op} '${val}'`));
-            });
-            if (wh.length) q += ` WHERE ${wh.join(' AND ')}`;
-            // FACET
-            const fs = Array.from(facetList.selectedOptions).map(o => o.value);
-            if (fs.length) q += ` FACET ${fs.join(',')}`;
-            // TIMESERIES
-            if (tsChk.checked) {
-                const tv = document.getElementById('tsVal').value, tu = document.getElementById('tsUnit').value;
-                if (tv) q += ` TIMESERIES ${tv} ${tu}`;
-            }
-            // Relative
-            [['useRelSince', 'relSinceVal', 'relSinceUnit', 'SINCE'], ['useRelUntil', 'relUntilVal', 'relUntilUnit', 'UNTIL']]
-                .forEach(([c, v, u, kw]) => {
-                    if (document.getElementById(c).checked) {
-                        const vv = document.getElementById(v).value, uu = document.getElementById(u).value;
-                        if (vv) q += ` ${kw} ${vv} ${uu} ago`;
-                    }
+
+        let autoId;
+        function startAuto() { autoId = setInterval(buildQuery, 1000); }
+        function stopAuto() { clearInterval(autoId); }
+
+        function buildQuery() {
+            if (!$('#tableSelect').val()) { alert('Select table'); return; }
+            let q = 'SELECT ';
+            const agg = $('#aggFunc').val(), aggCol = $('#aggColumn').val();
+            const cols = $('#columnSelect').val() || ['*'];
+            q += agg ? `${agg}(${aggCol})` : cols.join(', ');
+            q += ` FROM ${$('#tableSelect').val()}`;
+
+            // Filters
+            const filters = [];
+            $('#filterContainer .filter-row').each((i, r) => {
+                const opVal = r.children[0].value;
+                const colVal = r.children[1].value;
+                const condVal = r.children[2].value;
+                let v = r.children[3].value || '';
+
+                if (/IN|NOT IN/.test(condVal)) {
+                    v = '(' + v.split(',').map(x => `'${x.trim()}'`).join(', ') + ')';
+                } else if (condVal === 'BETWEEN') {
+                    // expecting "A AND B"
+                } else if (condVal === 'EXISTS') {
+                    v = '';
+                } else if (/NULL/.test(condVal)) {
+                    v = '';
+                } else {
+                    v = `'${v}'`;
                 }
-                );
-            // Absolute
-            if (document.getElementById('useAbsTime').checked) {
-                const sd = document.getElementById('absSinceDate').value, st = document.getElementById('absSinceTime').value;
-                const ed = document.getElementById('absUntilDate').value, et = document.getElementById('absUntilTime').value;
-                if (sd && st) q += ` SINCE '${sd} ${st}'`; if (ed && et) q += ` UNTIL '${ed} ${et}'`;
+
+                let clause = `${colVal} ${condVal}` + (v ? ` ${v}` : '');
+                if (i > 0) clause = `${opVal} ` + clause;
+                filters.push(clause);
+            });
+            if (filters.length) q += ' WHERE ' + filters.join(' ');
+
+            // Facets
+            const facets = $('#facetSelect').val();
+            if (facets && facets.length) q += ` FACET ${facets.join(', ')}`;
+
+            // Timeseries
+            if (agg) {
+                const ts = $('#timeseriesInterval').val();
+                if (ts) q += ` TIMESERIES ${ts}`;
             }
-            // LIMIT
-            const lim = document.getElementById('limit').value;
+
+            // Time range
+            if ($('input[name="timeType"]:checked').val() === 'absolute') {
+                const s = `${$('#absStartDate').val()} ${$('#absStartTime').val()}`;
+                const e = `${$('#absEndDate').val()} ${$('#absEndTime').val()}`;
+                if (s) q += ` SINCE '${s}'`;
+                if (e) q += ` UNTIL '${e}'`;
+            } else {
+                const sv = $('#sinceVal').val(), su = $('#sinceUnit').val();
+                const uv = $('#untilVal').val(), uu = $('#untilUnit').val();
+                if (sv) q += ` SINCE ${sv} ${su} ago`;
+                if (uv) q += ` UNTIL ${uv} ${uu} ago`;
+            }
+
+            // Limit
+            const lim = $('#limitInput').val();
             if (lim) q += ` LIMIT ${lim}`;
-            // Macros
-            q = applyMacros(q);
-            // Validate
-            if (!/^SELECT .+ FROM/.test(q)) queryOut.classList.add('invalid'); else queryOut.classList.remove('invalid');
-            queryOut.value = q;
-        };
-        document.getElementById('copyBtn').onclick = () => navigator.clipboard.writeText(queryOut.value);
+
+            $('#queryOutput').val(q);
+        }
+        let q = 'SELECT ';
+        const agg = $('#aggFunc').val(), aggCol = $('#aggColumn').val();
+        const cols = $('#columnSelect').val() || ['*'];
+        q += agg ? `${agg}(${aggCol})` : cols.join(', ');
+        q += ` FROM ${$('#tableSelect').val()}`;
+
+        // Filters
+        const filters = [];
+        $('#filterContainer .filter-row').each((i, r) => {
+            const $r = $(r);
+            const opVal = $r.find('select').eq(0).val();
+            const colVal = $r.find('select.filter-column, select').eq(1).val();
+            const condVal = $r.find('select').eq(2).val();
+            let v = $r.find('input').val() || '';
+
+            if (/IN|NOT IN/.test(condVal)) {
+                v = '(' + v.split(',').map(x => `'${x.trim()}'`).join(', ') + ')';
+            } else if (condVal === 'BETWEEN') {
+                // expecting "A AND B" format
+            } else if (condVal === 'EXISTS') {
+                v = '';
+            } else if (/NULL/.test(condVal)) {
+                v = '';
+            } else {
+                v = `'${v}'`;
+            }
+
+            let clause = `${colVal} ${condVal}` + (v ? ` ${v}` : '');
+            if (i > 0) clause = `${opVal} ` + clause;
+            filters.push(clause);
+        });
+        if (filters.length) q += ' WHERE ' + filters.join(' ');
+
+
+
+        function copyQuery() {
+            navigator.clipboard.writeText($('#queryOutput').val());
+        }
+
+        function saveQuery() {
+            const name = $('#queryName').val(); if (!name) { alert('Name?'); return; }
+            const state = {
+                table: $('#tableSelect').val(),
+                cols: $('#columnSelect').val(),
+                agg: $('#aggFunc').val(),
+                aggCol: $('#aggColumn').val(),
+                filters: $('#filterContainer .filter-row').map((i, r) => {
+                    const [op, col, cond, val] = r.children;
+                    return { op: op.value, col: col.value, cond: cond.value, val: val.value };
+                }).get(),
+                facets: $('#facetSelect').val(),
+                timeType: $('input[name="timeType"]:checked').val(),
+                since: { v: $('#sinceVal').val(), u: $('#sinceUnit').val() },
+                until: { v: $('#untilVal').val(), u: $('#untilUnit').val() },
+                abs: { sD: $('#absStartDate').val(), sT: $('#absStartTime').val(), eD: $('#absEndDate').val(), eT: $('#absEndTime').val() },
+                ts: $('#timeseriesInterval').val(),
+                lim: $('#limitInput').val()
+            };
+            const store = JSON.parse(localStorage.getItem('queries') || '{}');
+            store[name] = state;
+            localStorage.setItem('queries', JSON.stringify(store));
+            loadSaved();
+        }
+
+        function loadSaved() {
+            const sel = $('#savedQueries').empty().append('<option value="">-- Load --</option>');
+            const store = JSON.parse(localStorage.getItem('queries') || '{}');
+            Object.keys(store).forEach(k => sel.append(new Option(k, k)));
+        }
+
+        function loadQuery(name) {
+            if (!name) return;
+            const s = JSON.parse(localStorage.getItem('queries'))[name]; if (!s) return;
+            $('#tableSelect').val(s.table).trigger('change');
+            setTimeout(() => {
+                $('#columnSelect').val(s.cols).trigger('change');
+                $('#aggFunc').val(s.agg).trigger('change');
+                $('#aggColumn').val(s.aggCol).trigger('change');
+                $('#filterContainer').empty();
+                s.filters.forEach(f => {
+                    addFilter(f.op);
+                    const r = $('#filterContainer .filter-row').last()[0];
+                    r.children[1].value = f.col;
+                    r.children[2].value = f.cond;
+                    r.children[3].value = f.val;
+                    $(r.children[1]).trigger('change');
+                });
+                $('#facetSelect').val(s.facets).trigger('change');
+                $('input[name="timeType"][value="' + s.timeType + '"]').prop('checked', true);
+                $('#sinceVal').val(s.since.v);
+                $('#sinceUnit').val(s.since.u);
+                $('#untilVal').val(s.until.v);
+                $('#untilUnit').val(s.until.u);
+                $('#absStartDate').val(s.abs.sD);
+                $('#absStartTime').val(s.abs.sT);
+                $('#absEndDate').val(s.abs.eD);
+                $('#absEndTime').val(s.abs.eT);
+                $('#timeseriesInterval').val(s.ts);
+                $('#limitInput').val(s.lim);
+            }, 100);
+        }
+
+        $(document).ready(() => { init(); startAuto(); loadSaved(); });
     </script>
 </body>
+
 </html>
