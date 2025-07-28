@@ -7,6 +7,15 @@
     <title>NRQL Query Builder</title>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
+        header {
+            background: #0077cc;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
         :root {
             --bg: #f5f5f5;
             --text: #000;
@@ -95,10 +104,11 @@
 </head>
 
 <body data-theme="light">
+    <header>Advanced NRQL Query Builder</header>
     <button id="themeToggle">Toggle Theme</button>
     <div class="container">
         <div class="section">
-            <h2>Table & Column Selection</h2>
+            <h2>Table &amp; Column Selection</h2>
             <div class="row">
                 <select id="tableSelect"></select>
                 <select id="columnSelect" multiple style="width:400px"></select>
@@ -147,14 +157,16 @@
         <div class="section">
             <h2>Time Range</h2>
             <div class="row">
-                <label><input type="radio" name="timeType" value="relative" checked> Relative</label>
-                SINCE <input type="number" id="sinceVal" style="width:60px" /> <select id="sinceUnit">
+                <label><input type="radio" name="timeType" value="relative" checked /> Relative</label>
+                SINCE <input type="number" id="sinceVal" style="width:60px" />
+                <select id="sinceUnit">
                     <option>minutes</option>
                     <option>hours</option>
                     <option>days</option>
                     <option>weeks</option>
                 </select> ago
-                UNTIL <input type="number" id="untilVal" style="width:60px" /> <select id="untilUnit">
+                UNTIL <input type="number" id="untilVal" style="width:60px" />
+                <select id="untilUnit">
                     <option>minutes</option>
                     <option>hours</option>
                     <option>days</option>
@@ -162,7 +174,7 @@
                 </select> ago
             </div>
             <div class="row">
-                <label><input type="radio" name="timeType" value="absolute"> Absolute</label>
+                <label><input type="radio" name="timeType" value="absolute" /> Absolute</label>
                 Start: <input type="date" id="absStartDate" /> <input type="time" id="absStartTime" step="1" />
                 End: <input type="date" id="absEndDate" /> <input type="time" id="absEndTime" step="1" />
             </div>
@@ -177,7 +189,7 @@
             <h2>Query Controls</h2>
             <div class="row">
                 <button id="buildBtn">Build Query</button>
-                <label><input type="checkbox" id="autoRefresh" checked> Auto Refresh</label>
+                <label><input type="checkbox" id="autoRefresh" checked /> Auto Refresh</label>
             </div>
         </div>
 
@@ -195,6 +207,7 @@
                 <select id="savedQueries">
                     <option value="">-- Load --</option>
                 </select>
+                <button id="deleteQueryBtn">Delete</button>
             </div>
         </div>
     </div>
@@ -326,104 +339,54 @@
                 "sessionTraceId", "startupResponseData", "timeToLoadEventStart",
                 "trace.id", "userId", "userStatus", "uuid", "version", "viewerId"
             ]
+
         };
+
         function toggleTheme() {
             document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light';
         }
+
         function init() {
-            // Bind theme toggle
-            document.getElementById('themeToggle').onclick = toggleTheme;
-
-            // Initialize Select2 on static selects
+            $('#themeToggle').click(toggleTheme);
             $('#columnSelect, #facetSelect, #aggColumn').select2({ width: '200px' });
-
-            // Populate tables
+            // Populate table dropdown
             for (let t in SCHEMA) $('#tableSelect').append(new Option(t, t));
-            $('#tableSelect').on('change', populateCols);
-
-            // Aggregation -> Timeseries toggle
-            $('#aggFunc').on('change', e => {
-                $('#timeseriesSection').toggle(!!e.target.value);
-            });
-
-            // Build & auto-refresh
-            $('#buildBtn').on('click', buildQuery);
-            $('#autoRefresh').on('change', e => e.target.checked ? startAuto() : stopAuto());
-
-            // Load saved queries
+            $('#tableSelect').change(populateCols);
+            $('#aggFunc').change(e => $('#timeseriesSection').toggle(!!e.target.value));
+            $('#buildBtn').click(buildQuery);
+            $('#autoRefresh').change(e => e.target.checked ? startAuto() : stopAuto());
             populateCols();
             loadSaved();
-            $('#savedQueries').on('change', e => loadQuery(e.target.value));
-
-            // Radio switch TimeType (no action needed on UI)
-            $('input[name="timeType"]').on('change', () => { });
+            $('#savedQueries').change(e => loadQuery(e.target.value));
         }
 
         function populateCols() {
-            const table = $('#tableSelect').val();
-            const cols = SCHEMA[table] || [];
-
-            // Columns
-            const colSel = $('#columnSelect');
-            colSel.empty().append(new Option('*', '*'));
-            cols.forEach(c => colSel.append(new Option(c, c)));
-            colSel.trigger('change');
-
-            // Facets & Agg
+            const table = $('#tableSelect').val(), cols = SCHEMA[table] || [];
+            $('#columnSelect').empty().append(new Option('*', '*'));
+            cols.forEach(c => $('#columnSelect').append(new Option(c, c)));
+            $('#columnSelect').trigger('change');
             ['#facetSelect', '#aggColumn'].forEach(sel => {
-                const $s = $(sel);
-                $s.empty();
+                const $s = $(sel).empty();
                 cols.forEach(c => $s.append(new Option(c, c)));
                 $s.trigger('change');
             });
         }
 
         function addFilter(type = 'AND') {
-            // Create the row container
             const row = $('<div class="filter-row"></div>');
-
-            // Logic (AND/OR)
             const op = $('<select><option>AND</option><option>OR</option></select>').val(type);
-
-            // Column selector: pull from current table schema
             const col = $('<select class="filter-column"></select>');
-            const cols = SCHEMA[$('#tableSelect').val()] || [];
-            // Add a placeholder option
-            col.append(new Option('Select column…', '', false, false));
-            cols.forEach(c => col.append(new Option(c, c)));
-
-            // Condition selector
-            const cond = $(`
-            <select>
-                <option>=</option>
-                <option>!=</option>
-                <option>LIKE</option>
-                <option>IN</option>
-                <option>NOT IN</option>
-                <option>BETWEEN</option>
-                <option>EXISTS</option>
-                <option>IS NULL</option>
-                <option>IS NOT NULL</option>
-            </select>`);
-
-            // Value input
+            (SCHEMA[$('#tableSelect').val()] || []).forEach(c => col.append(new Option(c, c)));
+            const cond = $('<select>' +
+                '<option>=</option><option>!=</option><option>LIKE</option>' +
+                '<option>IN</option><option>NOT IN</option><option>BETWEEN</option>' +
+                '<option>EXISTS</option><option>IS NULL</option><option>IS NOT NULL</option>' +
+                '</select>');
             const val = $('<input type="text" placeholder="Enter value(s)…">');
-
-            // Delete button
-            const del = $('<button>❌</button>').on('click', () => row.remove());
-
-            // Assemble and append
-            row.append(op, col, cond, val, del)
-                .appendTo('#filterContainer');
-
-            // **Re-initialize Select2 on this new column dropdown**
-            col.select2({
-                width: '200px',
-                placeholder: 'Select column…',
-                allowClear: true
-            });
+            const del = $('<button>❌</button>').click(() => row.remove());
+            row.append(op, col, cond, val, del).appendTo('#filterContainer');
+            col.select2({ width: '200px', placeholder: 'Select column…', allowClear: true });
         }
-
 
         let autoId;
         function startAuto() { autoId = setInterval(buildQuery, 1000); }
@@ -437,43 +400,36 @@
             q += agg ? `${agg}(${aggCol})` : cols.join(', ');
             q += ` FROM ${$('#tableSelect').val()}`;
 
-            // Filters
-            const filters = [];
-            $('#filterContainer .filter-row').each((i, r) => {
-                const opVal = r.children[0].value;
-                const colVal = r.children[1].value;
-                const condVal = r.children[2].value;
-                let v = r.children[3].value || '';
-
+            const filterClauses = [];
+            $('#filterContainer .filter-row').each((i, row) => {
+                const $r = $(row);
+                const opVal = $r.find('select').eq(0).val();
+                const colVal = $r.find('select').eq(1).val();
+                const condVal = $r.find('select').eq(2).val();
+                let vRaw = $r.find('input').val() || '', v = '';
                 if (/IN|NOT IN/.test(condVal)) {
-                    v = '(' + v.split(',').map(x => `'${x.trim()}'`).join(', ') + ')';
+                    v = '(' + vRaw.split(',').map(x => `'${x.trim()}'`).join(', ') + ')';
                 } else if (condVal === 'BETWEEN') {
-                    // expecting "A AND B"
-                } else if (condVal === 'EXISTS') {
-                    v = '';
-                } else if (/NULL/.test(condVal)) {
+                    v = vRaw;
+                } else if (condVal === 'EXISTS' || condVal.includes('NULL')) {
                     v = '';
                 } else {
-                    v = `'${v}'`;
+                    v = `'${vRaw}'`;
                 }
-
                 let clause = `${colVal} ${condVal}` + (v ? ` ${v}` : '');
-                if (i > 0) clause = `${opVal} ` + clause;
-                filters.push(clause);
+                if (i > 0) clause = `${opVal} ${clause}`;
+                filterClauses.push(clause);
             });
-            if (filters.length) q += ' WHERE ' + filters.join(' ');
+            if (filterClauses.length) q += ' WHERE ' + filterClauses.join(' ');
 
-            // Facets
             const facets = $('#facetSelect').val();
             if (facets && facets.length) q += ` FACET ${facets.join(', ')}`;
 
-            // Timeseries
             if (agg) {
                 const ts = $('#timeseriesInterval').val();
                 if (ts) q += ` TIMESERIES ${ts}`;
             }
 
-            // Time range
             if ($('input[name="timeType"]:checked').val() === 'absolute') {
                 const s = `${$('#absStartDate').val()} ${$('#absStartTime').val()}`;
                 const e = `${$('#absEndDate').val()} ${$('#absEndTime').val()}`;
@@ -486,53 +442,19 @@
                 if (uv) q += ` UNTIL ${uv} ${uu} ago`;
             }
 
-            // Limit
             const lim = $('#limitInput').val();
             if (lim) q += ` LIMIT ${lim}`;
 
             $('#queryOutput').val(q);
         }
-        let q = 'SELECT ';
-        const agg = $('#aggFunc').val(), aggCol = $('#aggColumn').val();
-        const cols = $('#columnSelect').val() || ['*'];
-        q += agg ? `${agg}(${aggCol})` : cols.join(', ');
-        q += ` FROM ${$('#tableSelect').val()}`;
-
-        // Filters
-        const filters = [];
-        $('#filterContainer .filter-row').each((i, r) => {
-            const $r = $(r);
-            const opVal = $r.find('select').eq(0).val();
-            const colVal = $r.find('select.filter-column, select').eq(1).val();
-            const condVal = $r.find('select').eq(2).val();
-            let v = $r.find('input').val() || '';
-
-            if (/IN|NOT IN/.test(condVal)) {
-                v = '(' + v.split(',').map(x => `'${x.trim()}'`).join(', ') + ')';
-            } else if (condVal === 'BETWEEN') {
-                // expecting "A AND B" format
-            } else if (condVal === 'EXISTS') {
-                v = '';
-            } else if (/NULL/.test(condVal)) {
-                v = '';
-            } else {
-                v = `'${v}'`;
-            }
-
-            let clause = `${colVal} ${condVal}` + (v ? ` ${v}` : '');
-            if (i > 0) clause = `${opVal} ` + clause;
-            filters.push(clause);
-        });
-        if (filters.length) q += ' WHERE ' + filters.join(' ');
-
-
 
         function copyQuery() {
             navigator.clipboard.writeText($('#queryOutput').val());
         }
 
         function saveQuery() {
-            const name = $('#queryName').val(); if (!name) { alert('Name?'); return; }
+            const name = $('#queryName').val();
+            if (!name) { alert('Name?'); return; }
             const state = {
                 table: $('#tableSelect').val(),
                 cols: $('#columnSelect').val(),
@@ -563,8 +485,10 @@
         }
 
         function loadQuery(name) {
+            stopAuto();
             if (!name) return;
-            const s = JSON.parse(localStorage.getItem('queries'))[name]; if (!s) return;
+            const s = JSON.parse(localStorage.getItem('queries'))[name];
+            if (!s) return;
             $('#tableSelect').val(s.table).trigger('change');
             setTimeout(() => {
                 $('#columnSelect').val(s.cols).trigger('change');
@@ -591,10 +515,25 @@
                 $('#absEndTime').val(s.abs.eT);
                 $('#timeseriesInterval').val(s.ts);
                 $('#limitInput').val(s.lim);
+                startAuto();
             }, 100);
         }
 
-        $(document).ready(() => { init(); startAuto(); loadSaved(); });
+        $('#deleteQueryBtn').click(() => {
+            const name = $('#savedQueries').val();
+            if (!name) return alert('Select a saved query to delete.');
+            const store = JSON.parse(localStorage.getItem('queries') || '{}');
+            delete store[name];
+            localStorage.setItem('queries', JSON.stringify(store));
+            loadSaved();
+            $('#queryOutput').val('');
+        });
+
+        $(document).ready(() => {
+            init();
+            startAuto();
+            loadSaved();
+        });
     </script>
 </body>
 </html>
