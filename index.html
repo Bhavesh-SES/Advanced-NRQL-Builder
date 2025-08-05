@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,7 +11,7 @@
     <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
-        /* — your existing styles unchanged — */
+        /* ── CORE TOOL STYLES ── */
         header {
             background: #0077cc;
             color: #fff;
@@ -20,26 +19,32 @@
             text-align: center;
             font-size: 24px;
         }
-
         :root {
-            --bg: #f5f9f9;
+            --bg: #f5f5f5;
             --text: #000;
             --card: #fff;
         }
-
         [data-theme="dark"] {
-            --bg: #333;
-            --text: #eee;
-            --card: #444;
+            --bg: #c9c9c9;
+            --text: #fff;
+            --card: #060000;
         }
-
+        [data-theme="dark"] .select2-results__option {
+            color: black !important;
+        }
+        [data-theme="dark"] .section h2 {
+            color: white;
+        }
+        [data-theme="dark"] .select2-selection__choice {
+            background: #fff !important;
+            color: black !important;
+        }
         body {
             margin: 0;
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             background: var(--bg);
             color: var(--text);
         }
-
         .container {
             padding: 20px;
             max-width: 1200px;
@@ -48,21 +53,21 @@
             flex-direction: column;
             gap: 20px;
         }
-
         .section {
             background: var(--card);
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-
+        .section h2 {
+            margin-top: 0;
+        }
         .row {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             align-items: center;
         }
-
         select,
         input,
         button,
@@ -70,24 +75,20 @@
             padding: 5px;
             font-size: 14px;
         }
-
         textarea {
             width: 100%;
             height: 100px;
             font-family: monospace;
         }
-
         .filter-row {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
         }
-
         .filter-row select,
         .filter-row input {
             min-width: 100px;
         }
-
         .filter-row button {
             background: red;
             color: #fff;
@@ -95,26 +96,132 @@
             cursor: pointer;
             padding: 0 8px;
         }
-
         #themeToggle {
             position: fixed;
             top: 10px;
             right: 10px;
         }
+        /* ── LOGIN SCREEN STYLES ── */
+        #authScreen {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+        #bgVideo {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            filter: brightness(0.4);
+        }
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        .login-box {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px 40px;
+            border-radius: 10px;
+            text-align: center;
+            color: #fff;
+            box-shadow: 0 0 30px #000;
+            width: 320px;
+            box-sizing: border-box;
+        }
+        .login-box h2 {
+            margin-bottom: 20px;
+        }
+        /* Email & password inputs: identical size */
+        .login-box input[type="email"],
+        #authScreen .password-box input {
+            width: 100%;
+            height: 40px;
+            padding: 8px 12px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        /* Password wrapper for eye icon */
+        .password-box {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .password-box .icon-eye {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            font-size: 20px;
+            cursor: pointer;
+            color: #ccc;
+            background: transparent;
+            border: none;
+            z-index: 2;
+        }
+        .password-box .icon-eye:hover {
+            color: #fff;
+        }
+        .password-box input {
+            padding-right: 48px;
+            /* space for the icon */
+        }
+        /* Side-by-side Login / Sign Up buttons */
+        #authScreen .buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        #authScreen .buttons button {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #authScreen .buttons #loginBtn {
+            background: #28a745;
+            color: #fff;
+        }
+        #authScreen .buttons #signupBtn {
+            background: #007bff;
+            color: #fff;
+        }
     </style>
 </head>
-
 <body data-theme="light">
     <!-- AUTH SCREEN -->
-    <div id="authScreen">
-        <h2>Login / Sign Up</h2>
-        <input id="emailInput" type="email" placeholder="Email" />
-        <input id="passwordInput" type="password" placeholder="Password" />
-        <button id="loginBtn">Login</button>
-        <button id="signupBtn">Sign Up</button>
-        <div id="authMessage" style="color:red;"></div>
+    <div id="authScreen" class="auth-container">
+        <video autoplay muted loop id="bgVideo">
+            <source src="city_rain.mp4" type="video/mp4">
+            Your browser does not support HTML5 video.
+        </video>
+        <div class="login-box">
+            <h2>Login</h2>
+            <input type="email" id="emailInput" placeholder="Email" />
+            <div class="password-box">
+                <input type="password" id="passwordInput" placeholder="Password" />
+                <button type="button" id="togglePassword" class="icon-eye">👁️</button>
+            </div>
+            <div class="buttons">
+                <button id="loginBtn">Login</button>
+                <button id="signupBtn">Sign Up</button>
+            </div>
+            <div id="authMessage" style="color:red;"></div>
+        </div>
     </div>
-
     <!-- TOOL SCREEN -->
     <div id="toolScreen" style="display:none">
         <header>Advanced NRQL Query Builder</header>
@@ -225,11 +332,17 @@
             </div>
         </div>
     </div>
-
     <!-- Libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const pwd = document.getElementById('passwordInput');
+            const type = pwd.type === 'password' ? 'text' : 'password';
+            pwd.type = type;
+            this.textContent = type === 'password' ? '👁️' : '🙈';
+        });
+    </script>
     <script>
         // Firebase init
         const ADMIN_UIDS = [
@@ -247,134 +360,15 @@
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth(), db = firebase.firestore();
-
+        const email = document.getElementById('loginEmail')?.value?.trim();
+        const password = document.getElementById('loginPassword')?.value;
         // YOUR FULL SCHEMA HERE
         const SCHEMA = {
-            PageAction: [
-                "timestamp", "anonymous", "apdMode", "assetId", "audioCodec",
-                "bandwidthRedundancyRatio", "cdnName", "cirrRecent", "cirrSession",
-                "deviceId", "distanceToOrigin", "fixtureId", "hypercare", "isAutoPlay",
-                "isTopBitrate", "isWithinLiveWindow", "mediaType", "playbackSources",
-                "playerName", "presentationDelay", "qualityLevelRecent",
-                "qualityLevelSession", "rotationCount", "sessionId", "sourceCount",
-                "sourceIdentifier", "sourceOrigin", "sourceUrl", "stabilityScoreRecent",
-                "stabilityScoreSession", "videoCodec", "viewerId", "actionName",
-                "activeState", "adManagerName", "adManagerState", "agentVersion",
-                "appId", "appModeType", "appModeVariant", "appName", "asn", "asnLatitude",
-                "asnLongitude", "asnOrganization", "billingCountry", "boot.launch.target",
-                "boot.launch.version.bootstrap", "boot.launch.version.target",
-                "browserHeight", "browserWidth", "cacheHit", "cacheKey", "capabilities",
-                "category", "categoryName", "cdnIndex", "chapter", "chapterVersion", "city",
-                "clientIp", "connectionType", "contentCountry", "core.activityState",
-                "core.adapterVersion", "core.bootstrapVersion", "core.chapterName",
-                "core.chapterVersion", "core.contentCountry", "core.deviceBrand",
-                "core.deviceCpuCount", "core.deviceId", "core.deviceManufacturer",
-                "core.deviceModel", "core.deviceOsName", "core.deviceOsVersion",
-                "core.deviceRamGb", "core.deviceTier", "core.deviceType",
-                "core.deviceUserAgent", "core.firmwareVersion",
-                "core.fvDataFileRevision", "core.nrDeviceUuid", "core.partnerId",
-                "core.platform", "core.sessionId", "core.userState", "core.userStatus",
-                "core.userType", "countryCode", "currentUrl", "daznId", "delayInit",
-                "deviceModel", "devicePlatform", "deviceType", "duration", "durationMs",
-                "dynamicRange", "endTime", "entityGuid", "environmentGroup", "eventId",
-                "firmwareVersion", "firstChunkLoad", "focusedUi", "geoCountry",
-                "hasDevelopmentPath", "hasGoogle", "hasToken", "hasYospace", "homeOfX",
-                "inactiveModeSupported", "initId", "interruptionReason",
-                "isAlibCanaryUser@Dazn/MatchDayPanelWeb",
-                "isAlibCanaryUser@Dazn/SportsdataWeb", "isAuthChapter", "isOverlayShown",
-                "isPersonalised", "isUmShown", "jwt.expiredIso", "jwt.expires",
-                "jwt.issued", "jwt.issuedIso", "language", "languages", "manufacturer",
-                "message", "messageState", "muted", "name", "nativeApp",
-                "newBootstrapVersion", "newCatalogVersion", "newsLocale",
-                "numberOfTiles", "packageName", "packageVersion", "page", "pageUrl",
-                "platform", "platformType", "pubbyAction", "pubbyClientConfigured",
-                "pubbyClientExists", "randomAbPoint", "reason", "referrerUrl", "regionCode",
-                "renderDuration", "routerAction", "routerState", "session",
-                "sessionTraceId", "severity", "solutionVersion", "source", "sourceId",
-                "spanName", "ssaiSources", "startTime", "startupResponseData", "subPage",
-                "success", "timeSinceLoad", "title", "tokenExpired", "tokenTtl",
-                "umMessageId", "urlPath", "useExternalAdCdn", "userAgentName",
-                "userAgentOs", "userAgentVersion", "userStatus", "viewName", "volume",
-                "wasSubscribed"
-            ],
-            PageView: [
-                "timestamp", "agentVersion", "appId", "appModeType", "appModeVariant",
-                "appName", "asn", "asnLatitude", "asnLongitude", "asnOrganization",
-                "backendDuration", "boot.launch.target", "boot.launch.version.bootstrap",
-                "boot.launch.version.target", "browserTransactionName", "city", "clientIp",
-                "connectionSetupDuration", "core.adapterVersion", "core.bootstrapVersion",
-                "core.deviceBrand", "core.deviceCpuCount", "core.deviceId",
-                "core.deviceManufacturer", "core.deviceModel", "core.deviceOsName",
-                "core.deviceOsVersion", "core.deviceRamGb", "core.deviceType",
-                "core.deviceUserAgent", "core.firmwareVersion", "core.nrDeviceUuid",
-                "core.partnerId", "core.platform", "core.sessionId", "countryCode",
-                "deviceId", "deviceType", "dnsLookupDuration", "domProcessingDuration",
-                "domain", "duration", "entityGuid", "environmentGroup",
-                "firstContentfulPaint", "firstPaint", "geoCountry", "hasReplay",
-                "manufacturer", "name", "nativeApp", "networkDuration",
-                "pageRenderingDuration", "pageTraceId", "pageUrl", "platform",
-                "platformType", "queueDuration", "randomAbPoint", "regionCode",
-                "secureHandshakeDuration", "session", "sessionId", "sessionTraceId",
-                "userAgentName", "userAgentOs", "userAgentVersion", "viewerId",
-                "webAppDuration"
-            ],
-            JavaScriptError: [
-                "timestamp", "actionText", "activeState", "agentVersion", "alib", "appId",
-                "appModeType", "appModeVariant", "appName", "asn", "asnLatitude",
-                "asnLongitude", "asnOrganization", "billingCountry",
-                "boot.launch.target", "boot.launch.version.bootstrap",
-                "boot.launch.version.target", "browserInteractionId", "browserStackHash",
-                "caughtInPackage", "caughtInPackageVersion", "chapter", "chapterVersion",
-                "city", "clientIp", "code", "contentCountry", "core.adapterVersion",
-                "core.bootstrapVersion", "core.chapterName", "core.chapterVersion",
-                "core.contentCountry", "core.deviceBrand", "core.deviceCpuCount",
-                "core.deviceId", "core.deviceManufacturer", "core.deviceModel",
-                "core.deviceOsName", "core.deviceOsVersion", "core.deviceRamGb",
-                "core.deviceTier", "core.deviceType", "core.deviceUserAgent",
-                "core.firmwareVersion", "core.fvDataFileRevision", "core.nrDeviceUuid",
-                "core.partnerId", "core.platform", "core.sessionId", "core.userState",
-                "core.userStatus", "core.userType", "countryCode", "daznId", "description",
-                "deviceId", "deviceModel", "devicePlatform", "deviceType", "domain",
-                "durationMs", "endpoint", "entityGuid", "environmentGroup", "eraroCode",
-                "erroName", "errorCategory", "errorClass", "errorCode", "errorId",
-                "errorInfo", "errorMessage", "errorStatus", "errorTag", "errorType",
-                "firmwareVersion", "firstErrorInSession", "firstOccurrenceTimestamp",
-                "geoCountry", "inApp", "inactiveModeSupported",
-                "isAlibCanaryUser@Dazn/MatchDayPanelWeb",
-                "isAlibCanaryUser@Dazn/SportsdataWeb", "isAuthChapter", "isAutoRefresh",
-                "jwt.expiredIso", "jwt.expires", "jwt.issued", "jwt.issuedIso", "manufacturer",
-                "name", "nativeApp", "newsLocale", "packageEntryPath", "packageName",
-                "packageVersion", "pageCountry", "pageLanguage", "pageUrl",
-                "parentEventId", "payload", "platform", "platformType", "randomAbPoint",
-                "regionCode", "releaseIds", "request", "requestUri", "response", "retries",
-                "safeMode", "service", "session", "sessionTraceId", "source", "sourceCaller",
-                "stackHash", "stackTrace", "startupResponseData", "status", "statusCode",
-                "transactionName", "unhandledPromiseRejection", "userAgentName",
-                "userAgentOs", "userAgentVersion", "userStatus", "viewerId",
-                "zendeskLocale"
-            ],
-            AjaxRequest: [
-                "timestamp", "agentVersion", "appId", "appModeType", "appModeVariant",
-                "appName", "asn", "boot.launch.version.bootstrap",
-                "boot.launch.version.target", "chapter", "city", "clientIp",
-                "contentCountry", "core.activityState", "core.adapterVersion",
-                "core.bootstrapVersion", "core.chapterName", "core.chapterVersion",
-                "core.contentCountry", "core.deviceBrand", "core.deviceCpuCount",
-                "core.deviceId", "core.deviceManufacturer", "core.deviceModel",
-                "core.deviceOsName", "core.deviceOsVersion", "core.deviceRamGb",
-                "core.deviceTier", "core.deviceType", "core.deviceUserAgent",
-                "core.firmwareVersion", "core.fvDataFileRevision", "core.nrDeviceUuid",
-                "core.partnerId", "core.platform", "core.sessionId", "core.userState",
-                "core.userStatus", "core.userType", "countryCode", "daznId", "deviceId",
-                "deviceType", "entityGuid", "geoCountry", "hostname", "httpMethod",
-                "httpResponseCode", "isAuthChapter", "language", "manufacturer",
-                "nativeApp", "pageUrl", "platform", "platformType", "regionCode",
-                "requestBodySize", "requestUrl", "responseBodySize", "session",
-                "sessionTraceId", "startupResponseData", "timeToLoadEventStart",
-                "trace.id", "userId", "userStatus", "uuid", "version", "viewerId"
-            ]
+            AjaxRequest: ["Timestamp", "Agent Version", "App ID", "App Mode Type", "App Mode Variant", "App Name", "Asn", "Boot.Launch.Version.Bootstrap", "Boot.Launch.Version.Target", "Chapter", "City", "Client Ip", "Client Ip", "Content Country", "Core.Activity State", "Core.Adapter Version", "Core.Bootstrap Version", "Core.Chapter Name", "Core.Chapter Version", "Core.Content Country", "Core.Device Brand", "Core.Device Cpu Count", "Core.Device ID", "Core.Device Manufacturer", "Core.Device Model", "Core.Device Origin", "Core.Device OS Name", "Core.Device OS Version", "Core.Device Ram Gb", "Core.Device Store", "Core.Device Tier", "Core.Device Type", "Core.Device User Agent", "Core.Firmware Version", "Core.Fv Data File Revision", "Core.Nr Device Uuid", "Core.Partner ID", "Core.Platform", "Core.Session ID", "Core.User State", "Core.User Status", "Core.User Type", "Core.Zip Code", "Country Code", "Dazn ID", "Device ID", "Device Type", "Entity GUID", "Geo Country", "Hostname", "Http Method", "Http Response Code", "Is Auth Chapter", "Manufacturer", "Native App", "Page URL", "Platform", "Platform Type", "Region Code", "Request Body Size", "Request URL", "Response Body Size", "Session", "Session ID", "Session Trace ID", "Startup Response Data", "Time To Load Event Start", "Trace.ID", "User Status", "Viewer ID"],
+            Javascript: ["Timestamp", "Action Text", "Agent Version", "App ID", "App Name", "Asn", "Asn Latitude", "Asn Longitude", "Asn Organization", "Billing Country", "Boot.Launch.Target", "Boot.Launch.Version.Bootstrap", "Boot.Launch.Version.Target", "Browser Interaction ID", "Browser Stack Hash", "Chapter", "Chapter Version", "City", "Client Ip", "Code", "Component Stack", "Content Country", "Country Code", "Dazn ID", "Description", "Device ID", "Device Type", "Domain", "Duration Ms", "Endpoint", "Entity GUID", "Environment Group", "Eraro Code", "Erro Name", "Error Category", "Error Class", "Error ID", "Error Message", "Error Status", "Error Tag", "First Error In Session", "First Occurrence Timestamp", "Geo Country", "In App", "Is Alib Canary User @Dazn/Match Day Panel Web", "Is Alib Canary User @Dazn/Sportsdata Web", "Is Auth Chapter", "Is Auto Refresh", "Jwt.Expired Iso", "Jwt.Expires", "Jwt.Issued", "Jwt.Issued Iso", "Manufacturer", "Name", "Native App", "News Locale", "Page Country", "Page Language", "Page URL", "Parent Event ID", "Payload", "Platform", "Random Ab Point", "Region Code", "Release Ids", "Request URI", "Response", "Retries", "Safe Mode", "Service", "Session ID", "Session Trace ID", "Source", "Source Caller", "Stack Hash", "Stack Trace", "Status", "Status Code", "Transaction Name", "Unhandled Promise Rejection", "User Agent Name", "User Agent OS", "User Agent Version", "User Status", "User Type", "Viewer ID", "Zendesk Locale"],
+            PageAction: ["Timestamp", " Anonymous", " Asset ID", " Audio Codec", " Bandwidth Redundancy Ratio", " Cdn Name", " Cirr Recent", " Cirr Session", " Device ID", " Distance To Origin", " Fixture ID", " Hypercare", " Is Auto Play", " Is Top Bitrate", " Is Within Live Window", " Media Type", "Mhid", " Playback Sources", " Player Name", " Presentation Delay", " Quality Level Recent", " Quality Level Session", " Rotation Count", " Session ID", " Source Count", " Source Identifier", " Source Origin", " Source URL", " Stability Score Recent", " Stability Score Session", " Video Codec", " Viewer ID", "Action Name", "Active State", "Agent Version", "App ID", "App Mode Type", "App Mode Variant", "App Name", "Article ID", "Article Title", "Asn", "Asn Latitude", "Asn Longitude", "Asn Organization", "Billing Country", "Billing Period", "Boot.Launch.Target", "Boot.Launch.Version.Bootstrap", "Boot.Launch.Version.Target", "Browser", "Browser Height", "Browser Version", "Browser Width", "Cache Hit", "Cache Key", "Category", "Category ID", "Category Name", "Chapter", "Chapter Version", "City", "Click Source", "Client Ip", "Client Ip", "Connection Type", "Content Country", "Core.Adapter Version", "Core.Bootstrap Version", "Core.Chapter Name", "Core.Chapter Version", "Core.Content Country", "Core.Device Brand", "Core.Device Cpu Count", "Core.Device ID", "Core.Device Manufacturer", "Core.Device Model", "Core.Device Origin", "Core.Device OS Name", "Core.Device OS Version", "Core.Device Ram Gb", "Core.Device Store", "Core.Device Tier", "Core.Device Type", "Core.Device User Agent", "Core.Firmware Version", "Core.Fv Data File Revision", "Core.Nr Device Uuid", "Core.Partner ID", "Core.Platform", "Core.Session ID", "Core.User State", "Core.User Status", "Core.User Type", "Core.Zip Code", "Country Code", "Current URL", "Dazn ID", "Delay Init", "Device ID", "Device Model", "Device OS", "Device OS Version", "Device Platform", "Device Type", "Duration", "Duration Ms", "End Time", "End Time Seconds", "Entitlement Set ID", "Entity GUID", "Environment Group", "Error Message", "Firmware Version", "First Chunk Load", "Focused Ui", "Geo Country", "Group ID", "Has Development Path", "In App", "Inactive Mode Supported", "Init ID", "Is3pp Exit", "Is Alib Canary User @Dazn/Match Day Panel Web", "Is Alib Canary User @Dazn/Sportsdata Web", "Is Auth Chapter", "Is Cwc", "Is Overlay Shown", "Is Sign In Chapter", "Is Um Shown", "Jwt.Expired Iso", "Jwt.Expires", "Jwt.Issued", "Jwt.Issued Iso", "Language", "Languages", "Link ID", "Link Name", "Link Type", "Manufacturer", "Message", "Metric Name", "Muted", "Name", "Native App", "News Locale", "Original Server Error", "Package Name", "Package Version", "Page", "Page Country", "Page Language", "Page Locale", "Page URL", "Parsed Error", "Platform", "Platform Name", "Platform Type", "Product Group", "Pubby Action", "Pubby Client Configured", "Pubby Client Exists", "Random Ab Point", "Referrer URL", "Region Code", "Render Duration", "Request Payload", "Resource Strings Key", "Router Action", "Service Name", "Service Timeout", "Service URL", "Session", "Session ID", "Session Trace ID", "Severity", "Solution Version", "Source", "Source ID", "Span Name", "Specific Device", "Start Time", "Start Time Seconds", "Startup Response Data", "Step", "Success", "Time Since Load", "Token", "Token Expired", "Token Ttl", "Total Timespent", "URL Path", "User Agent Name", "User Agent OS", "User Agent Version", "User Status", "Value", "View Name", "Viewer ID", "Volume", "Was Subscribed"],
+            Pageview: ["Timestamp", "Agent Version", "App ID", "App Mode Type", "App Mode Variant", "App Name", "Asn", "Asn Latitude", "Asn Longitude", "Asn Organization", "Backend Duration", "Boot.Launch.Target", "Boot.Launch.Version.Bootstrap", "Boot.Launch.Version.Target", "Browser Transaction Name", "City", "Client Ip", "Client Ip", "Connection Setup Duration", "Core.Adapter Version", "Core.Bootstrap Version", "Core.Chapter Name", "Core.Chapter Version", "Core.Content Country", "Core.Device Brand", "Core.Device Cpu Count", "Core.Device ID", "Core.Device Manufacturer", "Core.Device Model", "Core.Device Origin", "Core.Device OS Name", "Core.Device OS Version", "Core.Device Ram Gb", "Core.Device Store", "Core.Device Tier", "Core.Device Type", "Core.Device User Agent", "Core.Firmware Version", "Core.Fv Data File Revision", "Core.Nr Device Uuid", "Core.Partner ID", "Core.Platform", "Core.Session ID", "Core.User State", "Core.User Status", "Core.User Type", "Core.Zip Code", "Country Code", "Device ID", "Device Type", "Dns Lookup Duration", "Dom Processing Duration", "Domain", "Duration", "Entity GUID", "Environment Group", "First Contentful Paint", "First Paint", "Geo Country", "Has Replay", "Manufacturer", "Name", "Native App", "Network Duration", "Page Rendering Duration", "Page Trace ID", "Page URL", "Platform", "Platform Type", "Queue Duration", "Random Ab Point", "Region Code", "Secure Handshake Duration", "Session", "Session ID", "Session Trace ID", "Startup Response Data", "User Agent Name", "User Agent OS", "User Agent Version", "Viewer ID", "Web App Duration"]
         };
-
         // Populate table dropdown and wire up select2
         function initSchema() {
             const $t = $('#tableSelect').empty();
@@ -391,7 +385,6 @@
                 const $s = $(sel).empty(); cols.forEach(c => $s.append(new Option(c, c)));
             });
         }
-
         // Dedupe helpers
         function addFilter(type = 'AND') {
             const row = $('<div class="filter-row"></div>');
@@ -410,7 +403,6 @@
         let autoId;
         function startAuto() { autoId = setInterval(buildQuery, 1000); }
         function stopAuto() { clearInterval(autoId); }
-
         function buildQuery() {
             if (!$('#tableSelect').val()) { return; }
             let q = 'SELECT ';
@@ -448,9 +440,7 @@
             const lim = $('#limitInput').val(); if (lim) q += ` LIMIT ${lim}`;
             $('#queryOutput').val(q);
         }
-
         function copyQuery() { navigator.clipboard.writeText($('#queryOutput').val()); }
-
         function saveQuery() {
             const name = $('#queryName').val().trim();
             if (!name) return alert('Please enter a name for your query.');
@@ -460,12 +450,12 @@
                 aggFunc: $('#aggFunc').val() || '',
                 aggColumn: $('#aggColumn').val() || '',
                 filters: $('#filterContainer .filter-row').map((i, row) => {
-                    const [op, col, cond, val] = row.children;
+                    const $row = $(row);
                     return {
-                        op: op.value || 'AND',
-                        col: col.value || '',
-                        cond: cond.value || '=',
-                        val: val.value || ''
+                        op: $row.find('select').eq(0).val(),      // AND / OR
+                        col: $row.find('select').eq(1).val(),      // column name
+                        cond: $row.find('select').eq(2).val(),      // =, !=, LIKE, etc.
+                        val: $row.find('input').val() || ''       // **always** grab the input’s value
                     };
                 }).get(),
                 facets: $('#facetSelect').val() || [],
@@ -491,31 +481,19 @@
                 .then(loadSaved)
                 .catch(e => alert('Save failed: ' + e.message));
             console.log('Saving state:', state);
-
         }
-
         function loadQuery(name) {
-            if (!name) return;
-            // Stop the auto‐refresh so it doesn’t stomp on us while we set things up
+            if (!name) return;                // Stop the auto‐refresh so it doesn’t stomp on us while we set things up
             stopAuto();
-
             db.collection('queries').doc(name).get().then(doc => {
                 if (!doc.exists) return alert('Saved query not found!');
-                const s = doc.data();
-
-                // 1) Restore table → triggers populateCols() to rebuild column/facet/Agg lists
-                $('#tableSelect').val(s.table).trigger('change');
-
-                // 2) After columns & selects are repopulated, restore the rest
+                const s = doc.data();                // 1) Restore table → triggers populateCols() to rebuild column/facet/Agg lists
+                $('#tableSelect').val(s.table).trigger('change');                // 2) After columns & selects are repopulated, restore the rest
                 setTimeout(() => {
                     // Columns
-                    $('#columnSelect').val(s.columns).trigger('change');
-
-                    // Aggregation
+                    $('#columnSelect').val(s.columns).trigger('change');                    // Aggregation
                     $('#aggFunc').val(s.aggFunc).trigger('change');
-                    $('#aggColumn').val(s.aggColumn).trigger('change');
-
-                    // Filters: clear & rebuild each row
+                    $('#aggColumn').val(s.aggColumn).trigger('change');                    // Filters: clear & rebuild each row
                     $('#filterContainer').empty();
                     s.filters.forEach(f => {
                         addFilter(f.op);
@@ -524,11 +502,8 @@
                         $row.find('select').eq(2).val(f.cond);
                         $row.find('input').val(f.val);
                     });
-
                     // Facets
-                    $('#facetSelect').val(s.facets).trigger('change');
-
-                    // Time settings
+                    $('#facetSelect').val(s.facets).trigger('change');                    // Time settings
                     $('input[name="timeType"][value="' + s.timeType + '"]')
                         .prop('checked', true);
                     $('#sinceVal').val(s.since.num);
@@ -538,44 +513,29 @@
                     $('#absStartDate').val(s.abs.startDate);
                     $('#absStartTime').val(s.abs.startTime);
                     $('#absEndDate').val(s.abs.endDate);
-                    $('#absEndTime').val(s.abs.endTime);
-
-                    // Timeseries & limit
+                    $('#absEndTime').val(s.abs.endTime);                    // Timeseries & limit
                     $('#timeseriesInterval').val(s.timeseries);
-                    $('#limitInput').val(s.limit);
-
-                    // Finally, kick auto‐refresh back on if checked
+                    $('#limitInput').val(s.limit);                    // Finally, kick auto‐refresh back on if checked
                     if ($('#autoRefresh').prop('checked')) startAuto();
-
                 }, 100);
             }).catch(err => {
                 alert('Error loading query: ' + err.message);
             });
         }
-
-
         function loadSaved() {
             db.collection('queries').get().then(snapshot => {
                 const sel = $('#savedQueries').empty().append('<option value="">-- Load --</option>');
                 snapshot.forEach(doc => sel.append(new Option(doc.id, doc.id)));
             });
         }
-
         // Auth & init
-        auth.onAuthStateChanged(async user => {
-            // Show/hide login vs. tool screens
+        auth.onAuthStateChanged(async user => {            // Show/hide login vs. tool screens
             $('#authScreen').toggle(!user);
             $('#toolScreen').toggle(!!user);
-            if (!user) return;
-
-            // Fetch token with custom claims and check for an "admin" flag
+            if (!user) return;            // Fetch token with custom claims and check for an "admin" flag
             const { claims } = await user.getIdTokenResult();
-            const isAdmin = !!claims.admin;
-
-            // Only admins see the Delete button
-            $('#deleteQueryBtn').toggle(isAdmin);
-
-            // Initialize your tool UI exactly as before
+            const isAdmin = !!claims.admin;            // Only admins see the Delete button
+            $('#deleteQueryBtn').toggle(isAdmin);            // Initialize your tool UI exactly as before
             initSchema();
             $('#columnSelect,#facetSelect,#aggColumn')
                 .select2({ width: '200px', placeholder: 'Select…' });
@@ -588,28 +548,31 @@
                 if (!n) return alert('Select one');
                 db.collection('queries').doc(n).delete().then(loadSaved);
             });
-
             // Finally load your saved queries
             loadSaved();
         });
-
         $('#autoRefresh').off('change').on('change', e => e.target.checked ? startAuto() : stopAuto());
-        $('#signupBtn').click(() => auth.createUserWithEmailAndPassword($('#emailInput').val(), $('#passwordInput').val())
-            .catch(e => $('#authMessage').text(e.message)));
-        $('#loginBtn').click(() => auth.signInWithEmailAndPassword($('#emailInput').val(), $('#passwordInput').val())
-            .catch(e => $('#authMessage').text(e.message)));
+        $('#signupBtn').click(() => {
+            auth.createUserWithEmailAndPassword(
+                $('#emailInput').val().trim(),
+                $('#passwordInput').val()
+            ).catch(e => $('#authMessage').text(e.message));
+        });
+        $('#loginBtn').click(() => {
+            auth.signInWithEmailAndPassword(
+                $('#emailInput').val().trim(),
+                $('#passwordInput').val()
+            ).catch(e => $('#authMessage').text(e.message));
+        });
         $('#themeToggle').click(() => document.body.dataset.theme = document.body.dataset.theme === 'light' ? 'dark' : 'light');
         $('#logoutBtn').click(() => {
             firebase.auth().signOut()
-                .then(() => {
-                    // optional: clear UI, show auth screen
+                .then(() => {                    // optional: clear UI, show auth screen
                     $('#toolScreen').hide();
                     $('#authScreen').show();
                 })
                 .catch(err => alert('Sign-out error: ' + err.message));
         });
-
-
     </script>
 </body>
 </html>
