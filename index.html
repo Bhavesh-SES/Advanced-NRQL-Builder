@@ -356,7 +356,7 @@
             <div class="section">
                 <h2>Save/Load Queries</h2>
                 <div class="row">
-                    <input id="queryName" type="text" placeholder="Query name" />
+                    <input id="queryName" type="text" placeholder="Enter Query name to Save !!" />
                     <button onclick="saveQuery()">Save</button>
                     <select id="savedQueries" style="width:200px"></select>
                     <button id="deleteQueryBtn">Delete</button>
@@ -585,9 +585,17 @@
                     const sel = $('#savedQueries')
                         .empty()
                         .append('<option value="">-- Load --</option>');
+
                     snapshot.forEach(doc => sel.append(new Option(doc.id, doc.id)));
+
+                    // Re-init Select2 after data is loaded
+                    sel.select2({
+                        placeholder: 'Search or select a saved query',
+                        width: '50%' // ensures it stretches to fit
+                    });
                 });
         }
+
 
 
         // Auth & init
