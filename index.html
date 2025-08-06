@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,32 +20,39 @@
             text-align: center;
             font-size: 24px;
         }
+
         :root {
             --bg: #f5f5f5;
             --text: #000;
             --card: #fff;
         }
+
         [data-theme="dark"] {
             --bg: #c9c9c9;
             --text: #fff;
             --card: #060000;
         }
+
         [data-theme="dark"] .select2-results__option {
             color: black !important;
         }
+
         [data-theme="dark"] .section h2 {
             color: white;
         }
+
         [data-theme="dark"] .select2-selection__choice {
             background: #fff !important;
             color: black !important;
         }
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background: var(--bg);
             color: var(--text);
         }
+
         .container {
             padding: 20px;
             max-width: 1200px;
@@ -53,21 +61,25 @@
             flex-direction: column;
             gap: 20px;
         }
+
         .section {
             background: var(--card);
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+
         .section h2 {
             margin-top: 0;
         }
+
         .row {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             align-items: center;
         }
+
         select,
         input,
         button,
@@ -75,20 +87,24 @@
             padding: 5px;
             font-size: 14px;
         }
+
         textarea {
             width: 100%;
             height: 100px;
             font-family: monospace;
         }
+
         .filter-row {
             display: flex;
             gap: 10px;
             margin-bottom: 10px;
         }
+
         .filter-row select,
         .filter-row input {
             min-width: 100px;
         }
+
         .filter-row button {
             background: red;
             color: #fff;
@@ -96,11 +112,13 @@
             cursor: pointer;
             padding: 0 8px;
         }
+
         #themeToggle {
             position: fixed;
             top: 10px;
             right: 10px;
         }
+
         /* ── LOGIN SCREEN STYLES ── */
         #authScreen {
             position: relative;
@@ -108,6 +126,7 @@
             width: 100%;
             overflow: hidden;
         }
+
         #bgVideo {
             position: fixed;
             right: 0;
@@ -117,12 +136,14 @@
             z-index: -1;
             filter: brightness(0.4);
         }
+
         .auth-container {
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100%;
         }
+
         .login-box {
             background: rgba(0, 0, 0, 0.7);
             padding: 30px 40px;
@@ -133,9 +154,11 @@
             width: 320px;
             box-sizing: border-box;
         }
+
         .login-box h2 {
             margin-bottom: 20px;
         }
+
         /* Email & password inputs: identical size */
         .login-box input[type="email"],
         #authScreen .password-box input {
@@ -148,12 +171,14 @@
             font-size: 16px;
             margin-bottom: 10px;
         }
+
         /* Password wrapper for eye icon */
         .password-box {
             position: relative;
             width: 100%;
             margin-bottom: 10px;
         }
+
         .password-box .icon-eye {
             position: absolute;
             right: 8px;
@@ -170,19 +195,23 @@
             border: none;
             z-index: 2;
         }
+
         .password-box .icon-eye:hover {
             color: #fff;
         }
+
         .password-box input {
             padding-right: 48px;
             /* space for the icon */
         }
+
         /* Side-by-side Login / Sign Up buttons */
         #authScreen .buttons {
             display: flex;
             gap: 20px;
             margin-top: 20px;
         }
+
         #authScreen .buttons button {
             flex: 1;
             padding: 12px;
@@ -191,16 +220,19 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         #authScreen .buttons #loginBtn {
             background: #28a745;
             color: #fff;
         }
+
         #authScreen .buttons #signupBtn {
             background: #007bff;
             color: #fff;
         }
     </style>
 </head>
+
 <body data-theme="light">
     <!-- AUTH SCREEN -->
     <div id="authScreen" class="auth-container">
@@ -329,6 +361,12 @@
                     <select id="savedQueries" style="width:200px"></select>
                     <button id="deleteQueryBtn">Delete</button>
                 </div>
+                <!-- Add this inside the same .section, after your Delete button -->
+                <div class="row" style="margin-top: 10px;">
+                    <textarea id="queryDesc" placeholder="Enter a description for this query…"
+                        style="width:100%; height:60px; font-size:14px; padding:5px;"></textarea>
+                </div>
+
             </div>
         </div>
     </div>
@@ -381,10 +419,16 @@
             const cols = SCHEMA[$('#tableSelect').val()] || [];
             $('#columnSelect').empty().append(new Option('*', '*'));
             cols.forEach(c => $('#columnSelect').append(new Option(c, c)));
-            ['#facetSelect', '#aggColumn'].forEach(sel => {
-                const $s = $(sel).empty(); cols.forEach(c => $s.append(new Option(c, c)));
+            $('#columnSelect').trigger('change');
+
+            ['#aggColumn', '#facetSelect'].forEach(sel => {
+                const $s = $(sel).empty();
+                cols.forEach(c => $s.append(new Option(c, c)));
+                $s.trigger('change');
             });
         }
+
+
         // Dedupe helpers
         function addFilter(type = 'AND') {
             const row = $('<div class="filter-row"></div>');
@@ -475,7 +519,8 @@
                     endTime: $('#absEndTime').val() || ''
                 },
                 timeseries: $('#timeseriesInterval').val() || '',
-                limit: $('#limitInput').val() || ''
+                limit: $('#limitInput').val() || '',
+                description: $('#queryDesc').val().trim()
             };
             db.collection('queries').doc(name).set(state)
                 .then(loadSaved)
@@ -483,17 +528,25 @@
             console.log('Saving state:', state);
         }
         function loadQuery(name) {
-            if (!name) return;                // Stop the auto‐refresh so it doesn’t stomp on us while we set things up
-            stopAuto();
+            stopAuto();              // pause auto-build while we rehydrate
+            if (!name) return;
+
             db.collection('queries').doc(name).get().then(doc => {
-                if (!doc.exists) return alert('Saved query not found!');
-                const s = doc.data();                // 1) Restore table → triggers populateCols() to rebuild column/facet/Agg lists
-                $('#tableSelect').val(s.table).trigger('change');                // 2) After columns & selects are repopulated, restore the rest
+                if (!doc.exists) return alert('Saved query not found.');
+                const s = doc.data();
+
+                // 1) pick the table (this fires populateCols)
+                $('#tableSelect').val(s.table).trigger('change');
+
+                // 2) once columns/Agg/Facet are repopulated (give it ~200ms)
                 setTimeout(() => {
-                    // Columns
-                    $('#columnSelect').val(s.columns).trigger('change');                    // Aggregation
+                    // restore multi-selects
+                    $('#columnSelect').val(s.columns).trigger('change');
                     $('#aggFunc').val(s.aggFunc).trigger('change');
-                    $('#aggColumn').val(s.aggColumn).trigger('change');                    // Filters: clear & rebuild each row
+                    $('#aggColumn').val(s.aggColumn).trigger('change');
+                    $('#facetSelect').val(s.facets).trigger('change');
+
+                    // rebuild your filter rows
                     $('#filterContainer').empty();
                     s.filters.forEach(f => {
                         addFilter(f.op);
@@ -502,10 +555,9 @@
                         $row.find('select').eq(2).val(f.cond);
                         $row.find('input').val(f.val);
                     });
-                    // Facets
-                    $('#facetSelect').val(s.facets).trigger('change');                    // Time settings
-                    $('input[name="timeType"][value="' + s.timeType + '"]')
-                        .prop('checked', true);
+
+                    // time & limit
+                    $('input[name="timeType"][value="' + s.timeType + '"]').prop('checked', true);
                     $('#sinceVal').val(s.since.num);
                     $('#sinceUnit').val(s.since.unit);
                     $('#untilVal').val(s.until.num);
@@ -513,21 +565,31 @@
                     $('#absStartDate').val(s.abs.startDate);
                     $('#absStartTime').val(s.abs.startTime);
                     $('#absEndDate').val(s.abs.endDate);
-                    $('#absEndTime').val(s.abs.endTime);                    // Timeseries & limit
+                    $('#absEndTime').val(s.abs.endTime);
                     $('#timeseriesInterval').val(s.timeseries);
-                    $('#limitInput').val(s.limit);                    // Finally, kick auto‐refresh back on if checked
+                    $('#limitInput').val(s.limit);
+                    $('#queryDesc').val(s.description || '');
+
+                    // 3) resume auto-refresh if they have it checked
                     if ($('#autoRefresh').prop('checked')) startAuto();
-                }, 100);
-            }).catch(err => {
-                alert('Error loading query: ' + err.message);
-            });
+                }, 200);
+            })
+                .catch(err => alert('Load failed: ' + err.message));
         }
+
+
         function loadSaved() {
-            db.collection('queries').get().then(snapshot => {
-                const sel = $('#savedQueries').empty().append('<option value="">-- Load --</option>');
-                snapshot.forEach(doc => sel.append(new Option(doc.id, doc.id)));
-            });
+            db.collection('queries')
+                .get()
+                .then(snapshot => {
+                    const sel = $('#savedQueries')
+                        .empty()
+                        .append('<option value="">-- Load --</option>');
+                    snapshot.forEach(doc => sel.append(new Option(doc.id, doc.id)));
+                });
         }
+
+
         // Auth & init
         auth.onAuthStateChanged(async user => {            // Show/hide login vs. tool screens
             $('#authScreen').toggle(!user);
@@ -551,7 +613,14 @@
             // Finally load your saved queries
             loadSaved();
         });
-        $('#autoRefresh').off('change').on('change', e => e.target.checked ? startAuto() : stopAuto());
+        // In your auth.onAuthStateChanged (or initTool) after setting up the handlers:
+        $('#autoRefresh').off('change')
+            .on('change', e => e.target.checked ? startAuto() : stopAuto());
+
+        // then, immediately if it’s already checked, fire it:
+        if ($('#autoRefresh').prop('checked')) {
+            startAuto();
+        }
         $('#signupBtn').click(() => {
             auth.createUserWithEmailAndPassword(
                 $('#emailInput').val().trim(),
@@ -575,4 +644,5 @@
         });
     </script>
 </body>
+
 </html>
